@@ -36,9 +36,13 @@ void Tank::update(float deltaTime) {
     }
     
     sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
     float margin = 20.0f;
-    position.x = std::max(margin, std::min(static_cast<float>(screenSize.x) - margin, position.x));
-    position.y = std::max(margin, std::min(static_cast<float>(screenSize.y) - margin, position.y));
+    bool outOfBounds = position.x < margin || position.x > extendedWidth - margin || 
+                       position.y < margin || position.y > static_cast<float>(screenSize.y) - margin;
+    if (outOfBounds) {
+        teleportToRandomPosition();
+    }
 }
 
 void Tank::render(sf::RenderWindow& window) {
@@ -118,9 +122,6 @@ void Tank::move(float dx, float deltaTime) {
         position.x = newX;
         position.y = newY;
     }
-    
-    position.x = std::max(20.0f, std::min(WORLD_WIDTH - 20.0f, position.x));
-    position.y = std::max(20.0f, std::min(WORLD_HEIGHT - 20.0f, position.y));
 }
 
 void Tank::setTargetPosition(sf::Vector2f target) {
@@ -217,9 +218,10 @@ void Tank::teleportToRandomPosition() {
     
     float margin = 50.0f;
     sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
     
     for (int attempts = 0; attempts < 50; attempts++) {
-        float x = margin + static_cast<float>(std::rand() % static_cast<int>(screenSize.x - margin * 2));
+        float x = margin + static_cast<float>(std::rand() % static_cast<int>(extendedWidth - margin * 2));
         float y = margin + static_cast<float>(std::rand() % static_cast<int>(screenSize.y - margin * 2));
         
         if (!checkBarrierCollision({x, y})) {

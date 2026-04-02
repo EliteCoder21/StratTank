@@ -95,8 +95,9 @@ sf::Vector2f WaveManager::getSpawnPosition(bool isFort, const std::vector<sf::Fl
     sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
     
     float margin = 50.0f;
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
     float minX = margin;
-    float maxX = static_cast<float>(screenSize.x) - margin;
+    float maxX = extendedWidth - margin;
     float minY = margin;
     float maxY = static_cast<float>(screenSize.y) - margin;
     

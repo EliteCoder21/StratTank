@@ -50,6 +50,8 @@ void Game::generateBarriers() {
     barriers.clear();
     int numBarriers = 15 + std::rand() % 12;
     
+    sf::Vector2u screenSize = window.getSize();
+    
     for (int i = 0; i < numBarriers; i++) {
         float width = 40.0f + static_cast<float>(std::rand() % 120);
         float height = 40.0f + static_cast<float>(std::rand() % 120);
@@ -59,8 +61,8 @@ void Game::generateBarriers() {
         bool valid = false;
         
         while (!valid && attempts < 50) {
-            x = 100.0f + static_cast<float>(std::rand() % 1800);
-            y = 100.0f + static_cast<float>(std::rand() % 1300);
+            x = 100.0f + static_cast<float>(std::rand() % static_cast<int>(screenSize.x - 200));
+            y = 100.0f + static_cast<float>(std::rand() % static_cast<int>(screenSize.y - 200));
             
             sf::FloatRect newBarrier({x, y}, {width, height});
             valid = true;
@@ -90,6 +92,7 @@ void Game::spawnEnemyBase() {
     sf::Vector2u screenSize = window.getSize();
     float centerX = screenSize.x / 2.0f;
     float centerY = screenSize.y / 2.0f;
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
     
     float angle = static_cast<float>(std::rand() % 360) * 3.14159f / 180.0f;
     float dist = std::min(screenSize.x, screenSize.y) * 0.4f + static_cast<float>(std::rand() % 200);
@@ -97,7 +100,7 @@ void Game::spawnEnemyBase() {
     float y = centerY + std::sin(angle) * dist;
     
     float margin = 100.0f;
-    x = std::max(margin, std::min(static_cast<float>(screenSize.x) - margin, x));
+    x = std::max(margin, std::min(extendedWidth - margin, x));
     y = std::max(margin, std::min(static_cast<float>(screenSize.y) - margin, y));
     
     auto base = std::make_unique<Fort>(x, y);
@@ -112,7 +115,7 @@ void Game::spawnEnemyBase() {
     base->setHealth(150);
     forts.push_back(std::move(base));
     
-    float guardX1 = std::max(50.0f, std::min(static_cast<float>(screenSize.x) - 50.0f, x + 80.0f));
+    float guardX1 = std::max(50.0f, std::min(extendedWidth - 50.0f, x + 80.0f));
     float guardY1 = std::max(50.0f, std::min(static_cast<float>(screenSize.y) - 50.0f, y));
     auto guardEnemy1 = std::make_unique<EnemyTank>(guardX1, guardY1, EntityType::EnemyLight);
     guardEnemy1->setProjectileCallback([this](float px, float py, float ang, int dmg, bool isPlayer) {
@@ -130,7 +133,7 @@ void Game::spawnEnemyBase() {
     guardEnemy1->setAllyTargets(guardTargets1);
     enemies.push_back(std::move(guardEnemy1));
     
-    float guardX2 = std::max(50.0f, std::min(static_cast<float>(screenSize.x) - 50.0f, x - 80.0f));
+    float guardX2 = std::max(50.0f, std::min(extendedWidth - 50.0f, x - 80.0f));
     float guardY2 = std::max(50.0f, std::min(static_cast<float>(screenSize.y) - 50.0f, y));
     auto guardEnemy2 = std::make_unique<EnemyTank>(guardX2, guardY2, EntityType::EnemyLight);
     guardEnemy2->setProjectileCallback([this](float px, float py, float ang, int dmg, bool isPlayer) {
@@ -573,7 +576,7 @@ void Game::handleBombExplosion(float cx, float cy, float radius) {
     particles.emitExplosion({cx, cy - radius * 0.6f});
     particles.emitExplosion({cx, cy + radius * 0.6f});
     
-    const int bombDamage = 150;
+    const int bombDamage = 500;
     
     for (auto& ally : allies) {
         if (ally && ally->isAlive()) {

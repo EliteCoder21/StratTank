@@ -102,7 +102,8 @@ void AllyTank::defendBase() {
     }
     
     sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    position.x = std::max(20.0f, std::min(static_cast<float>(screenSize.x) - 20.0f, position.x));
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
+    position.x = std::max(20.0f, std::min(extendedWidth - 20.0f, position.x));
     position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
     
     turretRotation = std::atan2(playerBasePosition.y - position.y, 
@@ -137,7 +138,8 @@ void AllyTank::wander() {
     }
     
     sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    position.x = std::max(20.0f, std::min(static_cast<float>(screenSize.x) - 20.0f, position.x));
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
+    position.x = std::max(20.0f, std::min(extendedWidth - 20.0f, position.x));
     position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
     
     turretRotation += 30.0f * 0.016f;
@@ -185,7 +187,8 @@ void AllyTank::attackEntity(Entity* target) {
     }
     
     sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    position.x = std::max(20.0f, std::min(static_cast<float>(screenSize.x) - 20.0f, position.x));
+    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
+    position.x = std::max(20.0f, std::min(extendedWidth - 20.0f, position.x));
     position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
     
     if (canShoot() && dist < 400.0f) {

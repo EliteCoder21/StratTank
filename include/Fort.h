@@ -44,9 +44,9 @@ private:
     float rotationSpeed = 1.0f;
     std::function<void(float, float, float, int, bool)> projectileCallback;
     std::function<void(float, float, float)> bombCallback;
-    float bombCooldown = 10.0f;
-    int bombDamage = 150;
-    float bombRadius = 150.0f;
+    float bombCooldown = 8.0f;
+    int bombDamage = 500;
+    float bombRadius = 400.0f;
     std::vector<Entity*> bombTargets;
     bool showHealthBar = true;
     sf::Vector2f bombTargetPosition = {0, 0};
