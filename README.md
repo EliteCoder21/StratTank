@@ -12,6 +12,8 @@
 - [Overview](#overview)
 - [Features](#features)
 - [Building](#building)
+  - [Linux / macOS](#linux--macos)
+  - [Windows (CMake)](#windows-cmake)
 - [Gameplay](#gameplay)
   - [Controls](#controls)
   - [Game Entities](#game-entities)
@@ -21,17 +23,19 @@
   - [Class Hierarchy](#class-hierarchy)
   - [C++ Concepts](#c-concepts-used)
   - [Design Patterns](#design-patterns)
+- [Project Structure](#project-structure)
 - [License](#license)
 
 ---
 
 ## Overview
 
-**StratTank** is a 2D top-down strategy tank game built in C++ using the SFML (Simple and Fast Multimedia Library). Command your tank alongside allied units to battle increasingly difficult waves of enemies through tactical positioning, strategic targeting, and coordinated attacks.
+**StratTank** is a 2D top-down strategy tank game built in C++ using SFML (Simple and Fast Multimedia Library). Command your tank alongside allied units to battle increasingly difficult waves of enemies through tactical positioning, strategic targeting, and coordinated attacks.
 
 **Author:** Aaryan Pawar  
 **License:** MIT License  
-**Build System:** CMake (C++17)  
+**Build Systems:** CMake (cross-platform), Makefile (Linux/macOS)  
+**C++ Standard:** C++17  
 **Dependencies:** SFML 3.0
 
 ---
@@ -39,13 +43,15 @@
 ## Features
 
 - **Player Tank Control** - WASD movement with mouse aiming and shooting
-- **Ally Commands** - Issue move/attack orders to allied tanks
+- **Ally Commands** - Issue move/attack orders to allied tanks with right-click
+- **6 Allied Tanks** - 2 guarding base, 4 mobile support units
 - **Multiple Enemy Types** - Light tanks, heavy tanks, and fortified positions
-- **Wave-Based Progression** - 7+ waves with escalating difficulty
-- **Strategic Gameplay** - Barriers, positioning, and tactical combat
+- **Wave-Based Progression** - 7 waves with escalating difficulty
+- **Strategic Gameplay** - Randomly generated barriers for tactical combat
 - **Visual Effects** - Particle systems for explosions, muzzle flashes, and smoke
-- **HUD System** - Real-time stats, wave information, and command feedback
-- **Minimap** - Track all units on the battlefield
+- **HUD System** - Health, wave number, score, enemy base status
+- **Dynamic World** - Adapts to any screen resolution
+- **Fort Bombs** - Area damage with visual warning indicators
 
 ---
 
@@ -53,20 +59,63 @@
 
 ### Prerequisites
 
-- CMake 3.10 or higher
-- C++17 compatible compiler (GCC, Clang, MSVC)
-- SFML 3.0 (Graphics, Audio, Window, System modules)
+- **C++17 compatible compiler** (GCC, Clang, MSVC)
+- **SFML 3.0** (Graphics, Audio, Window, System modules)
 
-### Build Instructions
+#### Installing SFML
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install libsfml-dev
+```
+
+**Fedora:**
+```bash
+sudo dnf install SFML-devel
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S sfml
+```
+
+**macOS (Homebrew):**
+```bash
+brew install sfml
+```
+
+**Windows:** Download from [SFML Downloads](https://www.sfml-dev.org/download.php)
+
+---
+
+### Linux / macOS
+
+#### Option 1: Makefile (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/StratTank.git
 cd StratTank
 
-# Create build directory
-mkdir build
-cd build
+# Build with make
+make
+
+# Run the game
+./StratTank
+
+# Clean build artifacts
+make clean
+```
+
+#### Option 2: CMake
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/StratTank.git
+cd StratTank
+
+# Create and enter build directory
+mkdir -p build && cd build
 
 # Generate build files
 cmake ..
@@ -75,24 +124,57 @@ cmake ..
 cmake --build . --config Release
 
 # Run the game
-./StratTank        # Linux/macOS
-StratTank.exe      # Windows
+./StratTank
 ```
 
-### Dependencies (Windows)
+---
 
-If running on Windows, ensure the following DLLs are in the same directory as the executable:
+### Windows (CMake)
 
+#### Using Visual Studio with CMake
+
+1. Open Visual Studio
+2. Select "Clone a repository"
+3. Enter: `https://github.com/yourusername/StratTank.git`
+4. Wait for CMake to configure
+5. Press `Ctrl+Shift+B` to build
+6. Press `F5` to run
+
+#### Using Command Line
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/StratTank.git
+cd StratTank
+
+# Create build directory
+mkdir build && cd build
+
+# Generate build files
+cmake ..
+
+# Build the project
+cmake --build . --config Release
+
+# Run the game
+.\Release\StratTank.exe
 ```
-libsfml-graphics-3.dll
-libsfml-window-3.dll
-libsfml-system-3.dll
-libsfml-audio-3.dll
-libsfml-network-3.dll
-libgcc_s_seh-1.dll
-libstdc++-6.dll
-libwinpthread-1.dll
-```
+
+#### DLL Dependencies
+
+If the game fails to start, ensure these DLLs are in the same directory as `StratTank.exe`:
+
+| DLL | Description |
+|-----|-------------|
+| `libsfml-graphics-3.dll` | Graphics module |
+| `libsfml-window-3.dll` | Window module |
+| `libsfml-system-3.dll` | System module |
+| `libsfml-audio-3.dll` | Audio module |
+| `libgcc_s_seh-1.dll` | GCC runtime |
+| `libstdc++-6.dll` | C++ standard library |
+| `libwinpthread-1.dll` | POSIX threads |
+
+These are typically found in your compiler's `bin` directory (e.g., `C:\msys64\ucrt64\bin` for MSYS2).
 
 ---
 
@@ -107,6 +189,7 @@ libwinpthread-1.dll
 | `Left Click` | Shoot |
 | `Right Click` | Command selected ally / Select ally |
 | `1` `2` `3` | Select ally tank 1, 2, or 3 |
+| `4` `5` `6` | Select additional ally tanks |
 | `Space` | Select all allies |
 | `Tab` | Cycle through allies |
 | `Shift + Right Click` | Command all allies |
@@ -119,22 +202,22 @@ libwinpthread-1.dll
 - **Speed:** 150 units/sec
 - **Damage:** 15 per shot
 - **Fire Rate:** 3.0 shots/sec
-- **Color:** Olive green (`#4a7c23`)
+- **Color:** Olive green
 
 #### Ally Tanks
 - **Health:** 60 HP
 - **Speed:** 120 units/sec
 - **Damage:** 12 per shot
 - **Fire Rate:** 3.0 shots/sec
-- **Color:** Darker green (`#3d6b1e`)
+- **Color:** Darker green
 
 #### Enemy Types
 
-| Type | Health | Speed | Damage | Fire Rate | Color |
-|------|--------|-------|--------|-----------|-------|
-| **Light Tank** | 30 HP | 120 | 10 | 2.5/sec | Saddle brown (`#8b4513`) |
-| **Heavy Tank** | 80 HP | 60 | 20 | 1.5/sec | Dark red-brown (`#5c2a2a`) |
-| **Fort** | 200 HP | 0 | 25 | 1.5/sec | Gray (`#4a4a4a`) |
+| Type | Health | Speed | Damage | Fire Rate |
+|------|--------|-------|--------|-----------|
+| **Light Tank** | 30 HP | 120 | 10 | 2.5/sec |
+| **Heavy Tank** | 80 HP | 60 | 20 | 1.5/sec |
+| **Fort** | 200 HP | 0 | 25 | 1.5/sec |
 
 #### Special Elements
 
@@ -200,77 +283,19 @@ Entity (Abstract Base)
 
 ### C++ Concepts Used
 
-#### Object-Oriented Programming
-
-- **Inheritance:** Base `Entity` class with derived game objects (Tank, Fort, Projectile, Heart)
-- **Polymorphism:** Virtual methods for `update()` and `render()` (Entity.h:30-31)
-- **Encapsulation:** Private members with public interfaces throughout
-
-#### Smart Pointers (Game.h:42-49)
-
-```cpp
-std::unique_ptr<PlayerTank> player;
-std::vector<std::unique_ptr<AllyTank>> allies;
-std::vector<std::unique_ptr<EnemyTank>> enemies;
-std::vector<std::unique_ptr<Fort>> forts;
-std::list<std::unique_ptr<Projectile>> projectiles;
-std::vector<std::unique_ptr<Heart>> hearts;
-```
-
-#### Function Objects / Callbacks (Tank.h:35-37)
-
-```cpp
-std::function<void(float, float, float, int, bool)> projectileCallback;
-std::function<void(float, float, float)> bombCallback;
-```
-
-#### Enums (Entity.h:8-23)
-
-```cpp
-enum class GameState { Playing, Paused, Victory, Defeat };
-enum class EntityType { Player, Ally, EnemyLight, EnemyHeavy, Fort, ... };
-```
-
-#### World Configuration
-
-The world bounds are dynamically set based on the actual window size using `WorldConfig`:
-- `WorldConfig::WIDTH` - World width (set from window size)
-- `WorldConfig::HEIGHT` - World height (set from window size)
-- `WorldConfig::MARGIN` - Boundary margin (20.0f)
-
-#### Standard Library Containers
-
-- `std::vector` - Dynamic arrays for entities, barriers, waves
-- `std::list` - Linked list for projectiles (efficient insertion/removal)
-- `std::unique_ptr` - Automatic memory management (RAII)
+- **Inheritance:** Base `Entity` class with derived game objects
+- **Polymorphism:** Virtual `update()` and `render()` methods
+- **Smart Pointers:** `std::unique_ptr` for automatic memory management
+- **Function Objects:** `std::function` for callbacks (projectiles, bombs)
+- **Enums:** `enum class` for type-safe game states and entity types
+- **Standard Containers:** `std::vector`, `std::list`, `std::function`
 
 ### Design Patterns
 
-#### Game Loop Pattern (Game.cpp)
-
-```cpp
-void Game::run() {
-    while (window.isOpen()) {
-        processEvents();
-        if (state == GameState::Playing) {
-            update(deltaTime);
-        }
-        render();
-    }
-}
-```
-
-#### Observer/Callback Pattern
-
-Function callbacks for projectile spawning and bomb attacks registered through constructors.
-
-#### Factory Pattern
-
-Wave spawning via `WaveManager` creates enemy types dynamically.
-
-#### RAII (Resource Acquisition Is Initialization)
-
-Smart pointers and font loading in `HUD.cpp` ensure proper resource cleanup.
+- **Game Loop:** Update/render cycle with delta time
+- **Observer/Callback:** Decoupled projectile and bomb event handling
+- **Factory:** `WaveManager` spawns enemies dynamically
+- **RAII:** Smart pointers ensure resource cleanup
 
 ### Key Implementation Files
 
@@ -278,13 +303,56 @@ Smart pointers and font loading in `HUD.cpp` ensure proper resource cleanup.
 |------|---------|
 | `Game.cpp` | Main game loop, state management, collision detection |
 | `Tank.cpp` | Base tank movement, steering, obstacle avoidance |
-| `AllyTank.cpp` | Ally AI behavior |
-| `EnemyTank.cpp` | Enemy AI, flanking, fleeing |
-| `Fort.cpp` | Fort bomb system, turret AI |
-| `WaveManager.cpp` | Wave spawning logic |
-| `ParticleSystem.cpp` | Visual effects |
+| `AllyTank.cpp` | Ally AI: auto-targeting, defending, wandering |
+| `EnemyTank.cpp` | Enemy AI: flanking, fleeing, patrol behavior |
+| `Fort.cpp` | Fort bomb system, rotating turret AI |
+| `WaveManager.cpp` | Wave configuration and enemy spawning |
+| `ParticleSystem.cpp` | Visual effects (explosions, muzzle flash, smoke) |
 | `HUD.cpp` | User interface rendering |
-| `WorldConfig.cpp` | Dynamic world bounds configuration |
+| `WorldConfig.cpp` | Dynamic world bounds based on window size |
+
+---
+
+## Project Structure
+
+```
+StratTank/
+├── CMakeLists.txt       # CMake build configuration
+├── Makefile             # Linux/macOS make build
+├── README.md            # This file
+├── LICENSE              # MIT License
+├── SPEC.md              # Game specification
+├── include/             # Header files
+│   ├── Entity.h
+│   ├── Tank.h
+│   ├── PlayerTank.h
+│   ├── AllyTank.h
+│   ├── EnemyTank.h
+│   ├── Fort.h
+│   ├── Projectile.h
+│   ├── Heart.h
+│   ├── ParticleSystem.h
+│   ├── WaveManager.h
+│   ├── HUD.h
+│   └── WorldConfig.h
+├── src/                 # Source files
+│   ├── main.cpp
+│   ├── Game.cpp
+│   ├── Entity.cpp
+│   ├── Tank.cpp
+│   ├── PlayerTank.cpp
+│   ├── AllyTank.cpp
+│   ├── EnemyTank.cpp
+│   ├── Fort.cpp
+│   ├── Projectile.cpp
+│   ├── Heart.cpp
+│   ├── ParticleSystem.cpp
+│   ├── WaveManager.cpp
+│   ├── HUD.cpp
+│   └── WorldConfig.cpp
+└── docs/
+    └── screenshots/     # Game screenshots
+```
 
 ---
 
