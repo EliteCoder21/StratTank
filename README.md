@@ -313,49 +313,6 @@ Entity (Abstract Base)
 
 ---
 
-## Project Structure
-
-```
-StratTank/
-├── CMakeLists.txt       # CMake build configuration
-├── Makefile             # Linux/macOS make build
-├── README.md            # This file
-├── LICENSE              # MIT License
-├── SPEC.md              # Game specification
-├── include/             # Header files
-│   ├── Entity.h
-│   ├── Tank.h
-│   ├── PlayerTank.h
-│   ├── AllyTank.h
-│   ├── EnemyTank.h
-│   ├── Fort.h
-│   ├── Projectile.h
-│   ├── Heart.h
-│   ├── ParticleSystem.h
-│   ├── WaveManager.h
-│   ├── HUD.h
-│   └── WorldConfig.h
-├── src/                 # Source files
-│   ├── main.cpp
-│   ├── Game.cpp
-│   ├── Entity.cpp
-│   ├── Tank.cpp
-│   ├── PlayerTank.cpp
-│   ├── AllyTank.cpp
-│   ├── EnemyTank.cpp
-│   ├── Fort.cpp
-│   ├── Projectile.cpp
-│   ├── Heart.cpp
-│   ├── ParticleSystem.cpp
-│   ├── WaveManager.cpp
-│   ├── HUD.cpp
-│   └── WorldConfig.cpp
-└── docs/
-    └── screenshots/     # Game screenshots
-```
-
----
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
