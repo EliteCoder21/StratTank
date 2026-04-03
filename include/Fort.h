@@ -46,7 +46,7 @@ private:
     std::function<void(float, float, float)> bombCallback;
     float bombCooldown = 8.0f;
     int bombDamage = 500;
-    float bombRadius = 400.0f;
+    float bombRadius = 200.0f;
     std::vector<Entity*> bombTargets;
     bool showHealthBar = true;
     sf::Vector2f bombTargetPosition = {0, 0};

@@ -62,8 +62,4 @@ private:
     bool shiftPressed = false;
 
     sf::Vector2f cameraPosition = {0, 0};
-    const float WORLD_WIDTH = 2000.0f;
-    const float WORLD_HEIGHT = 1500.0f;
-    const float VIEW_WIDTH = 1280.0f;
-    const float VIEW_HEIGHT = 720.0f;
 };

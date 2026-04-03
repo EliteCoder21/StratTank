@@ -20,6 +20,7 @@ set(SOURCES
     src/ParticleSystem.cpp
     src/WaveManager.cpp
     src/HUD.cpp
+    src/WorldConfig.cpp
 )
 
 add_executable(StratTank ${SOURCES})

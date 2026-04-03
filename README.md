@@ -1,7 +1,7 @@
 # StratTank - 2D Strategy Tank Game
 
 <div align="center">
-  <img src="docs/screenshots/gameplay_screenshot.png" alt="StratTank Gameplay" width="800"/>
+  <img src="docs/screenshots/gameplay.png" alt="StratTank Gameplay" width="800"/>
   <p><em>A top-down strategy tank game where you command your forces against enemy waves</em></p>
 </div>
 
@@ -16,11 +16,11 @@
   - [Controls](#controls)
   - [Game Entities](#game-entities)
   - [Wave System](#wave-system)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
   - [Class Hierarchy](#class-hierarchy)
   - [C++ Concepts](#c-concepts-used)
   - [Design Patterns](#design-patterns)
-- [Screenshots](#screenshots)
 - [License](#license)
 
 ---
@@ -139,7 +139,7 @@ libwinpthread-1.dll
 #### Special Elements
 
 - **Health Pickups (Hearts):** Spawn every 10 seconds, heal 25 HP
-- **Fort Bombs:** 400px radius, 500 damage, 10-second cooldown
+- **Fort Bombs:** 200px radius, 500 damage, 10-second cooldown
 
 ### Wave System
 
@@ -152,6 +152,34 @@ libwinpthread-1.dll
 | 5 | 5 | 3 | 2 |
 | 6 | 6 | 4 | 3 |
 | 7 | 8 | 5 | 4 |
+
+---
+
+## Screenshots
+
+<div align="center">
+
+### Main Gameplay
+![Gameplay](docs/screenshots/gameplay.png)
+*The battlefield with player tank, allies, and incoming enemies*
+
+### Combat
+![Combat](docs/screenshots/combat.png)
+*Strategic combat against enemy tanks and forts*
+
+### HUD Display
+![HUD](docs/screenshots/hud.png)
+*In-game HUD showing health, wave number, score, and enemy base status*
+
+### Victory Screen
+![Victory](docs/screenshots/victory.png)
+*Victory screen after clearing all waves*
+
+### Defeat Screen
+![Defeat](docs/screenshots/defeat.png)
+*Game over screen when the player is defeated*
+
+</div>
 
 ---
 
@@ -203,12 +231,12 @@ enum class GameState { Playing, Paused, Victory, Defeat };
 enum class EntityType { Player, Ally, EnemyLight, EnemyHeavy, Fort, ... };
 ```
 
-#### Constexpr and Constants
+#### World Configuration
 
-```cpp
-constexpr float WORLD_WIDTH = 2000.0f;    // Tank.h:7
-constexpr float WORLD_HEIGHT = 1500.0f;   // Tank.h:8
-```
+The world bounds are dynamically set based on the actual window size using `WorldConfig`:
+- `WorldConfig::WIDTH` - World width (set from window size)
+- `WorldConfig::HEIGHT` - World height (set from window size)
+- `WorldConfig::MARGIN` - Boundary margin (20.0f)
 
 #### Standard Library Containers
 
@@ -218,7 +246,7 @@ constexpr float WORLD_HEIGHT = 1500.0f;   // Tank.h:8
 
 ### Design Patterns
 
-#### Game Loop Pattern (Game.cpp:157-169)
+#### Game Loop Pattern (Game.cpp)
 
 ```cpp
 void Game::run() {
@@ -246,44 +274,17 @@ Smart pointers and font loading in `HUD.cpp` ensure proper resource cleanup.
 
 ### Key Implementation Files
 
-| File | Purpose | Key Lines |
-|------|---------|-----------|
-| `Game.cpp` | Main game loop, state management, collision detection | 157-169, 622-741 |
-| `Tank.cpp` | Base tank movement, steering, obstacle avoidance | 155-210 |
-| `AllyTank.cpp` | Ally AI behavior | 15-33, 35-197 |
-| `EnemyTank.cpp` | Enemy AI, flanking, fleeing | 55-223 |
-| `Fort.cpp` | Fort bomb system, turret AI | 21-36, 155-188 |
-| `WaveManager.cpp` | Wave spawning logic | 42-85 |
-| `ParticleSystem.cpp` | Visual effects | 6-86 |
-| `HUD.cpp` | User interface rendering | 47-60 |
-
----
-
-## Screenshots
-
-<div align="center">
-
-### Main Gameplay
-![Gameplay](docs/screenshots/gameplay_screenshot.png)
-*The battlefield with player tank, allies, and incoming enemies*
-
-### Command Interface
-![Commands](docs/screenshots/commands_screenshot.png)
-*Issuing attack commands to ally tanks*
-
-### Wave Progression
-![Waves](docs/screenshots/wave_screenshot.png)
-*HUD showing wave number and score progression*
-
-### Enemy Types
-![Enemies](docs/screenshots/enemies_screenshot.png)
-*Light tanks, heavy tanks, and forts in combat*
-
-### Victory Screen
-![Victory](docs/screenshots/victory_screenshot.png)
-*Victory screen after clearing all waves*
-
-</div>
+| File | Purpose |
+|------|---------|
+| `Game.cpp` | Main game loop, state management, collision detection |
+| `Tank.cpp` | Base tank movement, steering, obstacle avoidance |
+| `AllyTank.cpp` | Ally AI behavior |
+| `EnemyTank.cpp` | Enemy AI, flanking, fleeing |
+| `Fort.cpp` | Fort bomb system, turret AI |
+| `WaveManager.cpp` | Wave spawning logic |
+| `ParticleSystem.cpp` | Visual effects |
+| `HUD.cpp` | User interface rendering |
+| `WorldConfig.cpp` | Dynamic world bounds configuration |
 
 ---
 

@@ -1,4 +1,5 @@
 #include "Projectile.h"
+#include "WorldConfig.h"
 #include <cmath>
 
 Projectile::Projectile(float x, float y, float angle, int dmg, bool isPlayerProj)
@@ -8,18 +9,25 @@ Projectile::Projectile(float x, float y, float angle, int dmg, bool isPlayerProj
     
     float rad = angle * 3.14159f / 180.0f;
     direction = {std::cos(rad), std::sin(rad)};
+    
+    lifetime = std::hypot(WorldConfig::WIDTH, WorldConfig::HEIGHT) / speed;
 }
 
 void Projectile::update(float deltaTime) {
     position.x += direction.x * speed * deltaTime;
     position.y += direction.y * speed * deltaTime;
     
+    if (position.x < 0) position.x = 0;
+    if (position.y < 0) position.y = 0;
+    if (position.x > WorldConfig::WIDTH) position.x = WorldConfig::WIDTH;
+    if (position.y > WorldConfig::HEIGHT) position.y = WorldConfig::HEIGHT;
+    
     lifetime -= deltaTime;
     if (lifetime <= 0) {
         markForDeletion();
     }
     
-    if (position.x < 0 || position.x > 2000 || position.y < 0 || position.y > 1500) {
+    if (position.x <= 0 || position.x >= WorldConfig::WIDTH || position.y <= 0 || position.y >= WorldConfig::HEIGHT) {
         markForDeletion();
     }
 }

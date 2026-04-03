@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "WorldConfig.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -10,7 +11,13 @@ Game::Game()
     std::srand(static_cast<unsigned>(std::time(nullptr)));
     window.setFramerateLimit(60);
     
-    playerBase = std::make_unique<Fort>(1000.0f, 650.0f);
+    sf::Vector2u windowSize = window.getSize();
+    WorldConfig::initialize(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y));
+    
+    float centerX = WorldConfig::WIDTH / 2.0f;
+    float centerY = WorldConfig::HEIGHT / 2.0f;
+    
+    playerBase = std::make_unique<Fort>(centerX, centerY * 0.85f);
     playerBase->setProjectileCallback([this](float x, float y, float angle, int dmg, bool isPlayer) {
         this->spawnProjectile(std::make_unique<Projectile>(x, y, angle, dmg, true));
     });
@@ -19,18 +26,18 @@ Game::Game()
     playerBase->setHealth(3000);
     playerBase->setShowHealthBar(false);
     
-    player = std::make_unique<PlayerTank>(1000.0f, 750.0f);
+    player = std::make_unique<PlayerTank>(centerX, centerY);
     
     for (int i = 0; i < 2; i++) {
-        auto ally = std::make_unique<AllyTank>(900.0f + i * 200.0f, 750.0f, allies.size());
+        auto ally = std::make_unique<AllyTank>(centerX - 100.0f + i * 200.0f, centerY, allies.size());
         ally->setGuardingBase(true);
         allies.push_back(std::move(ally));
     }
     
     for (int i = 0; i < 4; i++) {
         float angle = static_cast<float>(i) * 1.5708f;
-        float x = 1000.0f + std::cos(angle) * 400.0f;
-        float y = 750.0f + std::sin(angle) * 300.0f;
+        float x = centerX + std::cos(angle) * 400.0f;
+        float y = centerY + std::sin(angle) * 300.0f;
         auto ally = std::make_unique<AllyTank>(x, y, allies.size());
         ally->setGuardingBase(false);
         allies.push_back(std::move(ally));
@@ -89,19 +96,17 @@ void Game::generateBarriers() {
 }
 
 void Game::spawnEnemyBase() {
-    sf::Vector2u screenSize = window.getSize();
-    float centerX = screenSize.x / 2.0f;
-    float centerY = screenSize.y / 2.0f;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
+    float centerX = WorldConfig::WIDTH / 2.0f;
+    float centerY = WorldConfig::HEIGHT / 2.0f;
     
     float angle = static_cast<float>(std::rand() % 360) * 3.14159f / 180.0f;
-    float dist = std::min(screenSize.x, screenSize.y) * 0.4f + static_cast<float>(std::rand() % 200);
+    float dist = std::min(WorldConfig::WIDTH, WorldConfig::HEIGHT) * 0.4f + static_cast<float>(std::rand() % 200);
     float x = centerX + std::cos(angle) * dist;
     float y = centerY + std::sin(angle) * dist;
     
     float margin = 100.0f;
-    x = std::max(margin, std::min(extendedWidth - margin, x));
-    y = std::max(margin, std::min(static_cast<float>(screenSize.y) - margin, y));
+    x = std::max(margin, std::min(WorldConfig::WIDTH - margin, x));
+    y = std::max(margin, std::min(WorldConfig::HEIGHT - margin, y));
     
     auto base = std::make_unique<Fort>(x, y);
     base->setProjectileCallback([this](float px, float py, float ang, int dmg, bool isPlayer) {
@@ -115,8 +120,8 @@ void Game::spawnEnemyBase() {
     base->setHealth(150);
     forts.push_back(std::move(base));
     
-    float guardX1 = std::max(50.0f, std::min(extendedWidth - 50.0f, x + 80.0f));
-    float guardY1 = std::max(50.0f, std::min(static_cast<float>(screenSize.y) - 50.0f, y));
+    float guardX1 = std::max(50.0f, std::min(WorldConfig::WIDTH - 50.0f, x + 80.0f));
+    float guardY1 = std::max(50.0f, std::min(WorldConfig::HEIGHT - 50.0f, y));
     auto guardEnemy1 = std::make_unique<EnemyTank>(guardX1, guardY1, EntityType::EnemyLight);
     guardEnemy1->setProjectileCallback([this](float px, float py, float ang, int dmg, bool isPlayer) {
         this->spawnProjectile(std::make_unique<Projectile>(px, py, ang, dmg, isPlayer));
@@ -133,8 +138,8 @@ void Game::spawnEnemyBase() {
     guardEnemy1->setAllyTargets(guardTargets1);
     enemies.push_back(std::move(guardEnemy1));
     
-    float guardX2 = std::max(50.0f, std::min(extendedWidth - 50.0f, x - 80.0f));
-    float guardY2 = std::max(50.0f, std::min(static_cast<float>(screenSize.y) - 50.0f, y));
+    float guardX2 = std::max(50.0f, std::min(WorldConfig::WIDTH - 50.0f, x - 80.0f));
+    float guardY2 = std::max(50.0f, std::min(WorldConfig::HEIGHT - 50.0f, y));
     auto guardEnemy2 = std::make_unique<EnemyTank>(guardX2, guardY2, EntityType::EnemyLight);
     guardEnemy2->setProjectileCallback([this](float px, float py, float ang, int dmg, bool isPlayer) {
         this->spawnProjectile(std::make_unique<Projectile>(px, py, ang, dmg, isPlayer));

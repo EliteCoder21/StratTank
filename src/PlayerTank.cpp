@@ -1,4 +1,5 @@
 #include "PlayerTank.h"
+#include "WorldConfig.h"
 #include <cmath>
 
 PlayerTank::PlayerTank(float x, float y)
@@ -33,9 +34,8 @@ void PlayerTank::update(float deltaTime) {
         
         rotation = std::atan2(moveY, moveX) * 180.0f / 3.14159f;
         
-        sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-        position.x = std::max(22.0f, std::min(static_cast<float>(screenSize.x) - 22.0f, position.x));
-        position.y = std::max(22.0f, std::min(static_cast<float>(screenSize.y) - 22.0f, position.y));
+        position.x = std::max(22.0f, std::min(WorldConfig::WIDTH - 22.0f, position.x));
+        position.y = std::max(22.0f, std::min(WorldConfig::HEIGHT - 22.0f, position.y));
     }
 }
 

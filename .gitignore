@@ -39,3 +39,33 @@
 
 # debug information files
 *.dwo
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+cmake_*.log
+*.cmake
+!CMakeLists.txt
+
+# Build directories
+build/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+
+# IDE files
+.vs/
+.vscode/
+*.suo
+*.user
+*.opensdf
+*.sdf
+ipch/
+
+# OS files
+.DS_Store
+Thumbs.db

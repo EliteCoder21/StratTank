@@ -1,6 +1,7 @@
 #include "WaveManager.h"
 #include "EnemyTank.h"
 #include "Fort.h"
+#include "WorldConfig.h"
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -92,14 +93,11 @@ WaveConfig WaveManager::getCurrentZone() const {
 }
 
 sf::Vector2f WaveManager::getSpawnPosition(bool isFort, const std::vector<sf::FloatRect>* barriers) {
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    
     float margin = 50.0f;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
     float minX = margin;
-    float maxX = extendedWidth - margin;
+    float maxX = WorldConfig::WIDTH - margin;
     float minY = margin;
-    float maxY = static_cast<float>(screenSize.y) - margin;
+    float maxY = WorldConfig::HEIGHT - margin;
     
     sf::Vector2f pos;
     bool valid = false;
@@ -110,8 +108,8 @@ sf::Vector2f WaveManager::getSpawnPosition(bool isFort, const std::vector<sf::Fl
         float x = minX + static_cast<float>(std::rand() % static_cast<int>(maxX - minX));
         float y = minY + static_cast<float>(std::rand() % static_cast<int>(maxY - minY));
         
-        float centerX = screenSize.x / 2.0f;
-        float centerY = screenSize.y / 2.0f;
+        float centerX = WorldConfig::WIDTH / 2.0f;
+        float centerY = WorldConfig::HEIGHT / 2.0f;
         float distFromCenter = std::sqrt(std::pow(x - centerX, 2) + std::pow(y - centerY, 2));
         if (distFromCenter < 250.0f) {
             x = centerX + (x > centerX ? 250.0f : -250.0f);
@@ -137,7 +135,7 @@ sf::Vector2f WaveManager::getSpawnPosition(bool isFort, const std::vector<sf::Fl
     }
     
     if (!valid) {
-        pos = {screenSize.x / 2.0f + 300.0f, screenSize.y / 2.0f};
+        pos = {WorldConfig::WIDTH / 2.0f + 300.0f, WorldConfig::HEIGHT / 2.0f};
         pos.x = std::max(minX, std::min(maxX, pos.x));
         pos.y = std::max(minY, std::min(maxY, pos.y));
     }

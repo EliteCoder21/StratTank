@@ -1,4 +1,5 @@
 #include "Tank.h"
+#include "WorldConfig.h"
 #include <cmath>
 
 Tank::Tank(float x, float y, EntityType type, int maxHealthVal, float speedVal, int damageVal, float fireRateVal)
@@ -35,11 +36,8 @@ void Tank::update(float deltaTime) {
         }
     }
     
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
-    float margin = 20.0f;
-    bool outOfBounds = position.x < margin || position.x > extendedWidth - margin || 
-                       position.y < margin || position.y > static_cast<float>(screenSize.y) - margin;
+    bool outOfBounds = position.x < WorldConfig::MARGIN || position.x > WorldConfig::WIDTH - WorldConfig::MARGIN || 
+                       position.y < WorldConfig::MARGIN || position.y > WorldConfig::HEIGHT - WorldConfig::MARGIN;
     if (outOfBounds) {
         teleportToRandomPosition();
     }
@@ -217,12 +215,10 @@ void Tank::teleportToRandomPosition() {
     if (!barriers) return;
     
     float margin = 50.0f;
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
     
     for (int attempts = 0; attempts < 50; attempts++) {
-        float x = margin + static_cast<float>(std::rand() % static_cast<int>(extendedWidth - margin * 2));
-        float y = margin + static_cast<float>(std::rand() % static_cast<int>(screenSize.y - margin * 2));
+        float x = margin + static_cast<float>(std::rand() % static_cast<int>(WorldConfig::WIDTH - margin * 2));
+        float y = margin + static_cast<float>(std::rand() % static_cast<int>(WorldConfig::HEIGHT - margin * 2));
         
         if (!checkBarrierCollision({x, y})) {
             position.x = x;
@@ -231,6 +227,6 @@ void Tank::teleportToRandomPosition() {
         }
     }
     
-    position.x = screenSize.x / 2.0f;
-    position.y = screenSize.y / 2.0f;
+    position.x = WorldConfig::WIDTH / 2.0f;
+    position.y = WorldConfig::HEIGHT / 2.0f;
 }

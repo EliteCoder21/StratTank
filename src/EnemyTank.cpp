@@ -1,5 +1,6 @@
 #include "EnemyTank.h"
 #include "Entity.h"
+#include "WorldConfig.h"
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -217,9 +218,8 @@ void EnemyTank::updateAI(float deltaTime) {
         }
     }
 
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    position.x = std::max(20.0f, std::min(static_cast<float>(screenSize.x) - 20.0f, position.x));
-    position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
+    position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
+    position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
 }
 
 void EnemyTank::updatePatrol(float deltaTime) {
@@ -251,9 +251,8 @@ void EnemyTank::updatePatrol(float deltaTime) {
         patrolTarget.x = position.x + patrolDirection.x * patrolRadius * 2.0f;
         patrolTarget.y = position.y + patrolDirection.y * patrolRadius * 2.0f;
         
-        sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-        patrolTarget.x = std::max(50.0f, std::min(static_cast<float>(screenSize.x) - 50.0f, patrolTarget.x));
-        patrolTarget.y = std::max(50.0f, std::min(static_cast<float>(screenSize.y) - 50.0f, patrolTarget.y));
+        patrolTarget.x = std::max(50.0f, std::min(WorldConfig::WIDTH - 50.0f, patrolTarget.x));
+        patrolTarget.y = std::max(50.0f, std::min(WorldConfig::HEIGHT - 50.0f, patrolTarget.y));
     }
     
     float currentAngle = turretRotation;

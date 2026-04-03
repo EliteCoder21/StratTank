@@ -20,5 +20,5 @@ private:
     int damage;
     bool playerProjectile;
     sf::Vector2f direction;
-    float lifetime = 3.0f;
+    float lifetime;
 };

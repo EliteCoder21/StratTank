@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Entity.h"
+#include "WorldConfig.h"
 #include <cmath>
 #include <functional>
-
-const float WORLD_WIDTH = 2000.0f;
-const float WORLD_HEIGHT = 1500.0f;
 
 class Tank : public Entity {
 public:

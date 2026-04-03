@@ -2,6 +2,7 @@
 #include "Entity.h"
 #include "PlayerTank.h"
 #include "EnemyTank.h"
+#include "WorldConfig.h"
 #include <cmath>
 #include <algorithm>
 
@@ -101,10 +102,8 @@ void AllyTank::defendBase() {
         }
     }
     
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
-    position.x = std::max(20.0f, std::min(extendedWidth - 20.0f, position.x));
-    position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
+    position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
+    position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
     
     turretRotation = std::atan2(playerBasePosition.y - position.y, 
                                 playerBasePosition.x - position.x) * 180.0f / 3.14159f;
@@ -137,10 +136,8 @@ void AllyTank::wander() {
         }
     }
     
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
-    position.x = std::max(20.0f, std::min(extendedWidth - 20.0f, position.x));
-    position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
+    position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
+    position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
     
     turretRotation += 30.0f * 0.016f;
 }
@@ -186,10 +183,8 @@ void AllyTank::attackEntity(Entity* target) {
         rotation = turretRotation;
     }
     
-    sf::Vector2u screenSize = sf::VideoMode::getDesktopMode().size;
-    float extendedWidth = static_cast<float>(screenSize.x) + 500.0f;
-    position.x = std::max(20.0f, std::min(extendedWidth - 20.0f, position.x));
-    position.y = std::max(20.0f, std::min(static_cast<float>(screenSize.y) - 20.0f, position.y));
+    position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
+    position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
     
     if (canShoot() && dist < 400.0f) {
         shoot();
