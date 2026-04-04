@@ -1,4 +1,5 @@
 #include "Tank.h"
+#include "CostMap.h"
 #include "WorldConfig.h"
 #include <cmath>
 
@@ -186,6 +187,11 @@ bool Tank::hasLineOfSight(const sf::Vector2f& targetPos) const {
     }
     
     return true;
+}
+
+sf::Vector2f Tank::getCostGradient(float x, float y) const {
+    if (!costMap) return {0, 0};
+    return costMap->getGradient(x, y);
 }
 
 void Tank::teleportToRandomPosition() {

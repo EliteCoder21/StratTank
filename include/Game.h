@@ -15,6 +15,7 @@
 #include "ParticleSystem.h"
 #include "WaveManager.h"
 #include "HUD.h"
+#include "CostMap.h"
 
 class Game {
 public:
@@ -22,6 +23,8 @@ public:
     ~Game();
 
     void run();
+    
+    const CostMap& getCostMap() const { return costMap; }
 
 private:
     void processEvents();
@@ -47,6 +50,7 @@ private:
     std::vector<sf::FloatRect> barriers;
     std::list<std::unique_ptr<Projectile>> projectiles;
     std::vector<std::unique_ptr<Heart>> hearts;
+    CostMap costMap;
     
     ParticleSystem particles;
     WaveManager waveManager;

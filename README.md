@@ -48,6 +48,7 @@
 - **Multiple Enemy Types** - Light tanks, heavy tanks, and fortified positions
 - **Wave-Based Progression** - 7 waves with escalating difficulty
 - **Strategic Gameplay** - Randomly generated barriers for tactical combat
+- **Cost-Based Pathfinding** - Tanks navigate around obstacles using gradient descent
 - **Line of Sight Combat** - Tanks can only shoot targets they can see
 - **Health Regeneration** - All tanks and forts regenerate 1 HP every 3 seconds
 - **Healing Hearts** - Health pickups heal all tanks (player, allies, enemies)

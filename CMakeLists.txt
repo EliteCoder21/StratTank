@@ -21,6 +21,7 @@ set(SOURCES
     src/WaveManager.cpp
     src/HUD.cpp
     src/WorldConfig.cpp
+    src/CostMap.cpp
 )
 
 add_executable(StratTank ${SOURCES})

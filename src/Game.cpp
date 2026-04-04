@@ -93,6 +93,8 @@ void Game::generateBarriers() {
             barriers.push_back(sf::FloatRect({x, y}, {width, height}));
         }
     }
+    
+    costMap.generate(barriers, WorldConfig::WIDTH, WorldConfig::HEIGHT);
 }
 
 void Game::spawnEnemyBase() {
@@ -312,6 +314,7 @@ void Game::update(float deltaTime) {
     }
     
     player->setBarriers(&barriers);
+    player->setCostMap(&costMap);
     if (player->isInsideBarrier()) {
         player->teleportToRandomPosition();
     }
@@ -334,9 +337,7 @@ void Game::update(float deltaTime) {
     
     for (auto& ally : allies) {
         ally->setBarriers(&barriers);
-        if (ally->isInsideBarrier()) {
-            ally->teleportToRandomPosition();
-        }
+        ally->setCostMap(&costMap);
         ally->setEnemyList(&enemies);
         ally->setFortList(&forts);
         ally->setHeartList(&hearts);
@@ -349,9 +350,7 @@ void Game::update(float deltaTime) {
     
     for (auto& enemy : enemies) {
         enemy->setBarriers(&barriers);
-        if (enemy->isInsideBarrier()) {
-            enemy->teleportToRandomPosition();
-        }
+        enemy->setCostMap(&costMap);
         enemy->setProjectileCallback([this](float x, float y, float angle, int dmg, bool isPlayer) {
             this->spawnProjectile(std::make_unique<Projectile>(x, y, angle, dmg, isPlayer));
         });

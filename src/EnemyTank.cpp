@@ -66,30 +66,78 @@ void EnemyTank::updateAI(float deltaTime) {
     const float LEADER_DISTANCE = 60.0f;
     
     float healthRatio = static_cast<float>(health) / maxHealth;
-    isFleeing = healthRatio < FLEE_HEALTH_THRESHOLD;
+    seekingHeart = false;
     
     sf::Vector2f targetPos = patrolTarget;
     float minDist = std::numeric_limits<float>::max();
     bool foundTarget = false;
     bool targetIsEnemy = false;
-    seekingHeart = false;
-
-    if (healthRatio < SEEK_HEAL_THRESHOLD && heartList && !heartList->empty()) {
-        for (const auto& heart : *heartList) {
-            if (heart && !heart->isMarkedForDeletion()) {
-                float d = std::sqrt(std::pow(heart->getPosition().x - position.x, 2) + 
-                                  std::pow(heart->getPosition().y - position.y, 2));
-                if (d < 600.0f && d < minDist && hasLineOfSight(heart->getPosition())) {
-                    minDist = d;
-                    targetPos = heart->getPosition();
-                    foundTarget = true;
-                    targetIsEnemy = false;
-                    isFleeing = true;
-                    seekingHeart = true;
+    
+    if (healthRatio < SEEK_HEAL_THRESHOLD) {
+        if (heartList && !heartList->empty()) {
+            for (const auto& heart : *heartList) {
+                if (heart && !heart->isMarkedForDeletion()) {
+                    float d = std::sqrt(std::pow(heart->getPosition().x - position.x, 2) + 
+                                      std::pow(heart->getPosition().y - position.y, 2));
+                    if (d < 600.0f && d < minDist && hasLineOfSight(heart->getPosition())) {
+                        minDist = d;
+                        targetPos = heart->getPosition();
+                        foundTarget = true;
+                        targetIsEnemy = false;
+                        seekingHeart = true;
+                    }
                 }
             }
         }
+        
+        if (foundTarget) {
+            isPatrolling = false;
+            isFleeing = true;
+        } else {
+            isPatrolling = true;
+            isFleeing = true;
+            updatePatrol(deltaTime);
+            targetPos = patrolTarget;
+        }
+        
+        float dist = std::sqrt(std::pow(targetPos.x - position.x, 2) + 
+                              std::pow(targetPos.y - position.y, 2));
+        
+        if (dist > 0 && !targetIsEnemy) {
+            sf::Vector2f dir = { (targetPos.x - position.x) / dist, 
+                               (targetPos.y - position.y) / dist };
+            
+            turretRotation = std::atan2(-dir.y, -dir.x) * 180.0f / 3.14159f;
+            sf::Vector2f fleeDir = {-dir.x, -dir.y};
+            
+            sf::Vector2f costGrad = getCostGradient(position.x, position.y);
+            if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
+                float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
+                if (gradLen > 0.1f) {
+                    float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
+                    sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
+                    fleeDir = {fleeDir.x + avoidDir.x * avoidStrength, fleeDir.y + avoidDir.y * avoidStrength};
+                    float moveLen = std::sqrt(fleeDir.x * fleeDir.x + fleeDir.y * fleeDir.y);
+                    if (moveLen > 0.0f) {
+                        fleeDir.x /= moveLen;
+                        fleeDir.y /= moveLen;
+                    }
+                }
+            }
+            
+            float newX = position.x + fleeDir.x * speed * deltaTime * 1.5f;
+            float newY = position.y + fleeDir.y * speed * deltaTime * 1.5f;
+            position.x = newX;
+            position.y = newY;
+            rotation = turretRotation;
+        }
+        
+        position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
+        position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
+        return;
     }
+    
+    isFleeing = healthRatio < FLEE_HEALTH_THRESHOLD;
 
     if (hasLeader() && leaderTank && leaderTank->isAlive()) {
         float leaderDist = std::sqrt(std::pow(leaderTank->getPosition().x - position.x, 2) + 
@@ -153,6 +201,7 @@ void EnemyTank::updateAI(float deltaTime) {
     float dist = std::sqrt(std::pow(targetPos.x - position.x, 2) + 
                           std::pow(targetPos.y - position.y, 2));
     float healSpeedMult = seekingHeart ? 2.0f : 1.0f;
+    bool canSeeTarget = hasLineOfSight(targetPos);
     
     if (dist > 0 && !targetIsEnemy) {
         sf::Vector2f dir = { (targetPos.x - position.x) / dist, 
@@ -163,10 +212,8 @@ void EnemyTank::updateAI(float deltaTime) {
             sf::Vector2f fleeDir = {-dir.x, -dir.y};
             float newX = position.x + fleeDir.x * speed * deltaTime * 1.2f * healSpeedMult;
             float newY = position.y + fleeDir.y * speed * deltaTime * 1.2f * healSpeedMult;
-            if (!checkBarrierCollision({newX, newY})) {
-                position.x = newX;
-                position.y = newY;
-            }
+            position.x = newX;
+            position.y = newY;
             rotation = turretRotation;
         } else {
             turretRotation = std::atan2(dir.y, dir.x) * 180.0f / 3.14159f;
@@ -194,10 +241,8 @@ void EnemyTank::updateAI(float deltaTime) {
                     }
                     float newX = position.x + strafeDir.x * speed * deltaTime * 0.8f * healSpeedMult;
                     float newY = position.y + strafeDir.y * speed * deltaTime * 0.8f * healSpeedMult;
-                    if (!checkBarrierCollision({newX, newY})) {
-                        position.x = newX;
-                        position.y = newY;
-                    }
+                    position.x = newX;
+                    position.y = newY;
                 }
             }
 
@@ -205,37 +250,44 @@ void EnemyTank::updateAI(float deltaTime) {
                 if (dist > 10.0f) {
                     float newX = position.x + dir.x * speed * 0.8f * deltaTime * healSpeedMult;
                     float newY = position.y + dir.y * speed * 0.8f * deltaTime * healSpeedMult;
-                    if (!checkBarrierCollision({newX, newY})) {
-                        position.x = newX;
-                        position.y = newY;
-                    }
-                }
-            } else if (dist > ATTACK_RADIUS) {
-                float newX = position.x + dir.x * speed * deltaTime * healSpeedMult;
-                float newY = position.y + dir.y * speed * deltaTime * healSpeedMult;
-                if (!checkBarrierCollision({newX, newY})) {
                     position.x = newX;
                     position.y = newY;
                 }
+            } else if (dist > ATTACK_RADIUS || !canSeeTarget) {
+                sf::Vector2f costGrad = getCostGradient(position.x, position.y);
+                sf::Vector2f moveDir = dir;
+                if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
+                    float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
+                    if (gradLen > 0.1f) {
+                        float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
+                        sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
+                        moveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
+                        float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                        if (moveLen > 0.0f) {
+                            moveDir.x /= moveLen;
+                            moveDir.y /= moveLen;
+                        }
+                    }
+                }
+                float newX = position.x + moveDir.x * speed * deltaTime * healSpeedMult;
+                float newY = position.y + moveDir.y * speed * deltaTime * healSpeedMult;
+                position.x = newX;
+                position.y = newY;
             } else if (dist < ATTACK_RADIUS * 0.5f) {
                 float newX = position.x + (-dir.x) * speed * 0.6f * deltaTime * healSpeedMult;
                 float newY = position.y + (-dir.y) * speed * 0.6f * deltaTime * healSpeedMult;
-                if (!checkBarrierCollision({newX, newY})) {
-                    position.x = newX;
-                    position.y = newY;
-                }
+                position.x = newX;
+                position.y = newY;
             } else {
                 float newX = position.x + dir.x * speed * 0.3f * deltaTime * healSpeedMult;
                 float newY = position.y + dir.y * speed * 0.3f * deltaTime * healSpeedMult;
-                if (!checkBarrierCollision({newX, newY})) {
-                    position.x = newX;
-                    position.y = newY;
-                }
+                position.x = newX;
+                position.y = newY;
             }
 
             rotation = turretRotation;
 
-            if (canShoot() && dist < ATTACK_RADIUS && !isPatrolling && !isFleeing && !seekingHeart && hasLineOfSight(targetPos)) {
+            if (canShoot() && dist < ATTACK_RADIUS && !isPatrolling && !isFleeing && !seekingHeart && canSeeTarget) {
                 shoot();
             }
         }
@@ -294,23 +346,49 @@ void EnemyTank::updatePatrol(float deltaTime) {
     if (type == EntityType::EnemyLight) {
         float strafeDir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
         sf::Vector2f perpDir = {-patrolDirection.y * strafeDir, patrolDirection.x * strafeDir};
-        float newX = position.x + patrolDirection.x * speed * PATROL_SPEED * deltaTime + perpDir.x * speed * 0.8f * deltaTime;
-        float newY = position.y + patrolDirection.y * speed * PATROL_SPEED * deltaTime + perpDir.y * speed * 0.8f * deltaTime;
-        if (!checkBarrierCollision({newX, newY})) {
-            position.x = newX;
-            position.y = newY;
-        } else {
-            patrolTimer = DIRECTION_CHANGE_TIME;
+        sf::Vector2f moveDir = {patrolDirection.x + perpDir.x * 0.8f, patrolDirection.y + perpDir.y * 0.8f};
+        
+        sf::Vector2f costGrad = getCostGradient(position.x, position.y);
+        if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
+            float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
+            if (gradLen > 0.1f) {
+                float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
+                sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
+                moveDir = {moveDir.x + avoidDir.x * avoidStrength, moveDir.y + avoidDir.y * avoidStrength};
+                float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                if (moveLen > 0.0f) {
+                    moveDir.x /= moveLen;
+                    moveDir.y /= moveLen;
+                }
+            }
         }
+        
+        float newX = position.x + moveDir.x * speed * PATROL_SPEED * deltaTime;
+        float newY = position.y + moveDir.y * speed * PATROL_SPEED * deltaTime;
+        position.x = newX;
+        position.y = newY;
     } else {
-        float newX = position.x + patrolDirection.x * speed * PATROL_SPEED * deltaTime;
-        float newY = position.y + patrolDirection.y * speed * PATROL_SPEED * deltaTime;
-        if (!checkBarrierCollision({newX, newY})) {
-            position.x = newX;
-            position.y = newY;
-        } else {
-            patrolTimer = DIRECTION_CHANGE_TIME;
+        sf::Vector2f moveDir = patrolDirection;
+        
+        sf::Vector2f costGrad = getCostGradient(position.x, position.y);
+        if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
+            float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
+            if (gradLen > 0.1f) {
+                float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
+                sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
+                moveDir = {moveDir.x + avoidDir.x * avoidStrength, moveDir.y + avoidDir.y * avoidStrength};
+                float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                if (moveLen > 0.0f) {
+                    moveDir.x /= moveLen;
+                    moveDir.y /= moveLen;
+                }
+            }
         }
+        
+        float newX = position.x + moveDir.x * speed * PATROL_SPEED * deltaTime;
+        float newY = position.y + moveDir.y * speed * PATROL_SPEED * deltaTime;
+        position.x = newX;
+        position.y = newY;
     }
     
     rotation = turretRotation;

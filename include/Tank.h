@@ -5,6 +5,8 @@
 #include <cmath>
 #include <functional>
 
+class CostMap;
+
 class Tank : public Entity {
 public:
     Tank(float x, float y, EntityType type, int maxHealth, float speed, int damage, float fireRate);
@@ -25,11 +27,13 @@ public:
     void updateCooldown(float deltaTime);
     
     void setBarriers(const std::vector<sf::FloatRect>* barriers) { this->barriers = barriers; }
+    void setCostMap(const CostMap* costMap) { this->costMap = costMap; }
     bool checkBarrierCollision(const sf::Vector2f& newPos);
     bool isInsideBarrier();
     void teleportToRandomPosition();
     
     bool hasLineOfSight(const sf::Vector2f& targetPos) const;
+    sf::Vector2f getCostGradient(float x, float y) const;
     
     void setProjectileCallback(std::function<void(float, float, float, int, bool)> callback) {
         projectileCallback = callback;
@@ -48,6 +52,7 @@ protected:
     bool hasTarget = false;
     std::function<void(float, float, float, int, bool)> projectileCallback;
     const std::vector<sf::FloatRect>* barriers = nullptr;
+    const CostMap* costMap = nullptr;
     float regenCooldown = 0.0f;
     static constexpr float REGEN_INTERVAL = 3.0f;
     static constexpr int REGEN_AMOUNT = 1;

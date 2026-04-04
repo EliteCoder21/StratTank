@@ -41,27 +41,33 @@ void AllyTank::findAndAttackNearestEnemy() {
     
     float healthRatio = static_cast<float>(health) / maxHealth;
     
-    if (healthRatio < SEEK_HEAL_THRESHOLD && heartList && !heartList->empty()) {
-        Entity* nearestHeart = nullptr;
-        float nearestDist = std::numeric_limits<float>::max();
-        
-        for (const auto& heart : *heartList) {
-            if (heart && !heart->isMarkedForDeletion()) {
-                float dist = std::sqrt(
-                    std::pow(heart->getPosition().x - position.x, 2) + 
-                    std::pow(heart->getPosition().y - position.y, 2)
-                );
-                if (dist < 600.0f && dist < nearestDist && hasLineOfSight(heart->getPosition())) {
-                    nearestDist = dist;
-                    nearestHeart = heart.get();
+    if (healthRatio < SEEK_HEAL_THRESHOLD) {
+        if (heartList && !heartList->empty()) {
+            Entity* nearestHeart = nullptr;
+            float nearestDist = std::numeric_limits<float>::max();
+            
+            for (const auto& heart : *heartList) {
+                if (heart && !heart->isMarkedForDeletion()) {
+                    float dist = std::sqrt(
+                        std::pow(heart->getPosition().x - position.x, 2) + 
+                        std::pow(heart->getPosition().y - position.y, 2)
+                    );
+                    if (dist < 600.0f && dist < nearestDist && hasLineOfSight(heart->getPosition())) {
+                        nearestDist = dist;
+                        nearestHeart = heart.get();
+                    }
                 }
+            }
+            
+            if (nearestHeart) {
+                attackEntity(nearestHeart);
+                return;
             }
         }
         
-        if (nearestHeart) {
-            attackEntity(nearestHeart);
-            return;
-        }
+        isPatrolling = true;
+        wander();
+        return;
     }
     
     if ((!enemyList || enemyList->empty()) && (!fortList || fortList->empty())) {
@@ -127,10 +133,8 @@ void AllyTank::defendBase() {
             dir.y /= len;
             float newX = position.x + dir.x * speed * 0.8f * 0.016f;
             float newY = position.y + dir.y * speed * 0.8f * 0.016f;
-            if (!checkBarrierCollision({newX, newY})) {
-                position.x = newX;
-                position.y = newY;
-            }
+            position.x = newX;
+            position.y = newY;
         }
     } else if (distToBase < idealDist - 30.0f) {
         sf::Vector2f dir = position - playerBasePosition;
@@ -140,10 +144,8 @@ void AllyTank::defendBase() {
             dir.y /= len;
             float newX = position.x + dir.x * speed * 0.4f * 0.016f;
             float newY = position.y + dir.y * speed * 0.4f * 0.016f;
-            if (!checkBarrierCollision({newX, newY})) {
-                position.x = newX;
-                position.y = newY;
-            }
+            position.x = newX;
+            position.y = newY;
         }
     }
     
@@ -172,12 +174,27 @@ void AllyTank::wander() {
     if (len > 5.0f) {
         dir.x /= len;
         dir.y /= len;
-        float newX = position.x + dir.x * speed * 0.8f * 0.016f;
-        float newY = position.y + dir.y * speed * 0.8f * 0.016f;
-        if (!checkBarrierCollision({newX, newY})) {
-            position.x = newX;
-            position.y = newY;
+        
+        sf::Vector2f costGrad = getCostGradient(position.x, position.y);
+        sf::Vector2f moveDir = dir;
+        if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
+            float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
+            if (gradLen > 0.1f) {
+                float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
+                sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
+                moveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
+                float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                if (moveLen > 0.0f) {
+                    moveDir.x /= moveLen;
+                    moveDir.y /= moveLen;
+                }
+            }
         }
+        
+        float newX = position.x + moveDir.x * speed * 0.8f * 0.016f;
+        float newY = position.y + moveDir.y * speed * 0.8f * 0.016f;
+        position.x = newX;
+        position.y = newY;
     }
     
     position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
@@ -207,30 +224,42 @@ void AllyTank::attackEntity(Entity* target) {
     bool isHealingHeart = target->isHeart();
     float currentSpeed = isHealingHeart ? speed * 2.0f : speed;
     float preferredDist = isHealingHeart ? 10.0f : 180.0f;
+    bool canSeeTarget = hasLineOfSight(target->getPosition());
     
-    if (dist > preferredDist + 20.0f) {
-        float newX = position.x + dir.x * currentSpeed * 0.016f;
-        float newY = position.y + dir.y * currentSpeed * 0.016f;
-        if (!checkBarrierCollision({newX, newY})) {
-            position.x = newX;
-            position.y = newY;
+    if (dist > preferredDist + 20.0f || !canSeeTarget) {
+        sf::Vector2f costGrad = getCostGradient(position.x, position.y);
+        sf::Vector2f moveDir = dir;
+        if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
+            float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
+            if (gradLen > 0.1f) {
+                float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
+                sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
+                moveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
+                float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                if (moveLen > 0.0f) {
+                    moveDir.x /= moveLen;
+                    moveDir.y /= moveLen;
+                }
+            }
         }
+        float newX = position.x + moveDir.x * currentSpeed * 0.016f;
+        float newY = position.y + moveDir.y * currentSpeed * 0.016f;
+        position.x = newX;
+        position.y = newY;
         rotation = turretRotation;
     } else if (dist < preferredDist - 20.0f) {
         sf::Vector2f retreatDir = {-dir.x, -dir.y};
         float newX = position.x + retreatDir.x * currentSpeed * 0.5f * 0.016f;
         float newY = position.y + retreatDir.y * currentSpeed * 0.5f * 0.016f;
-        if (!checkBarrierCollision({newX, newY})) {
-            position.x = newX;
-            position.y = newY;
-        }
+        position.x = newX;
+        position.y = newY;
         rotation = turretRotation;
     }
     
     position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
     position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
     
-    if (!isHealingHeart && canShoot() && dist < 400.0f && hasLineOfSight(target->getPosition())) {
+    if (!isHealingHeart && canShoot() && dist < 400.0f && canSeeTarget) {
         shoot();
     }
 }
