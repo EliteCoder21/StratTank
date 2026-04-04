@@ -150,65 +150,36 @@ bool Tank::checkBarrierCollision(const sf::Vector2f& newPos) {
     return false;
 }
 
-sf::Vector2f Tank::getSteeringFromObstacles(const sf::Vector2f& direction) {
-    if (!barriers) return {0, 0};
-    
-    float lookAhead = 150.0f;
-    float sideDist = 40.0f;
-    float steerStrength = 2.0f;
-    
-    sf::Vector2f perpDir = {direction.y, -direction.x};
-    
-    sf::Vector2f ahead1 = {
-        position.x + direction.x * lookAhead,
-        position.y + direction.y * lookAhead
-    };
-    sf::Vector2f ahead2 = {
-        position.x + direction.x * lookAhead * 0.5f + perpDir.x * sideDist,
-        position.y + direction.y * lookAhead * 0.5f + perpDir.y * sideDist
-    };
-    sf::Vector2f ahead3 = {
-        position.x + direction.x * lookAhead * 0.5f - perpDir.x * sideDist,
-        position.y + direction.y * lookAhead * 0.5f - perpDir.y * sideDist
-    };
-    
-    bool a1 = false, a2 = false, a3 = false;
-    
-    for (const auto& barrier : *barriers) {
-        if (barrier.contains(ahead1)) a1 = true;
-        if (barrier.contains(ahead2)) a2 = true;
-        if (barrier.contains(ahead3)) a3 = true;
-    }
-    
-    sf::Vector2f steering = {0, 0};
-    
-    if (a1) {
-        if (a2 && !a3) {
-            steering = {perpDir.x, perpDir.y};
-        } else if (a3 && !a2) {
-            steering = {-perpDir.x, -perpDir.y};
-        } else if (a2 && a3) {
-            steering = {-direction.x, -direction.y};
-        } else {
-            steering = (perpDir.x > perpDir.y) ? sf::Vector2f{perpDir.x, perpDir.y} : sf::Vector2f{-perpDir.x, -perpDir.y};
-        }
-    } else if (a2) {
-        steering = {perpDir.x, perpDir.y};
-    } else if (a3) {
-        steering = {-perpDir.x, -perpDir.y};
-    }
-    
-    float len = std::sqrt(steering.x * steering.x + steering.y * steering.y);
-    if (len > 0) {
-        steering.x /= len;
-        steering.y /= len;
-    }
-    
-    return {steering.x * steerStrength, steering.y * steerStrength};
-}
-
 bool Tank::isInsideBarrier() {
     return checkBarrierCollision(position);
+}
+
+bool Tank::hasLineOfSight(const sf::Vector2f& targetPos) const {
+    if (!barriers) return true;
+    
+    sf::Vector2f dir = targetPos - position;
+    float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+    if (dist < 1.0f) return true;
+    
+    dir.x /= dist;
+    dir.y /= dist;
+    
+    const int NUM_CHECKS = 10;
+    for (int i = 1; i < NUM_CHECKS; i++) {
+        float t = static_cast<float>(i) / NUM_CHECKS;
+        sf::Vector2f checkPos = {
+            position.x + dir.x * dist * t,
+            position.y + dir.y * dist * t
+        };
+        
+        for (const auto& barrier : *barriers) {
+            if (barrier.contains(checkPos)) {
+                return false;
+            }
+        }
+    }
+    
+    return true;
 }
 
 void Tank::teleportToRandomPosition() {

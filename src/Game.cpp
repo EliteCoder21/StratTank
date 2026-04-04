@@ -338,6 +338,7 @@ void Game::update(float deltaTime) {
             ally->teleportToRandomPosition();
         }
         ally->setEnemyList(&enemies);
+        ally->setFortList(&forts);
         ally->setPlayerBasePosition(playerBase->getPosition());
         ally->setProjectileCallback([this](float x, float y, float angle, int dmg, bool isPlayer) {
             this->spawnProjectile(std::make_unique<Projectile>(x, y, angle, dmg, isPlayer));
@@ -593,6 +594,14 @@ void Game::handleBombExplosion(float cx, float cy, float radius) {
         }
     }
     
+    for (auto it = allies.begin(); it != allies.end(); ) {
+        if (*it && !(*it)->isAlive()) {
+            it = allies.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    
     for (auto& enemy : enemies) {
         if (enemy && enemy->isAlive()) {
             float dist = std::sqrt(std::pow(enemy->getPosition().x - cx, 2) + 
@@ -600,6 +609,16 @@ void Game::handleBombExplosion(float cx, float cy, float radius) {
             if (dist <= radius) {
                 enemy->takeDamage(bombDamage);
             }
+        }
+    }
+    
+    for (auto it = enemies.begin(); it != enemies.end(); ) {
+        if (*it && !(*it)->isAlive()) {
+            it = enemies.erase(it);
+            score += 100;
+            waveManager.enemyDestroyed();
+        } else {
+            ++it;
         }
     }
     

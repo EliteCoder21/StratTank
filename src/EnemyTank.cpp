@@ -58,8 +58,8 @@ void EnemyTank::updateAI(float deltaTime) {
     if (aiUpdateTimer < aiUpdateInterval) return;
     aiUpdateTimer = 0.0f;
 
-    const float DETECTION_RADIUS = 500.0f;
-    const float ATTACK_RADIUS = 350.0f;
+    const float DETECTION_RADIUS = 800.0f;
+    const float ATTACK_RADIUS = 500.0f;
     const float FLEE_HEALTH_THRESHOLD = 0.35f;
     const float LEADER_DISTANCE = 60.0f;
     
@@ -140,9 +140,8 @@ void EnemyTank::updateAI(float deltaTime) {
         if (isFleeing && foundTarget) {
             turretRotation = std::atan2(-dir.y, -dir.x) * 180.0f / 3.14159f;
             sf::Vector2f fleeDir = {-dir.x, -dir.y};
-            sf::Vector2f steering = getSteeringFromObstacles(fleeDir);
-            float newX = position.x + (fleeDir.x + steering.x) * speed * deltaTime * 1.2f;
-            float newY = position.y + (fleeDir.y + steering.y) * speed * deltaTime * 1.2f;
+            float newX = position.x + fleeDir.x * speed * deltaTime * 1.2f;
+            float newY = position.y + fleeDir.y * speed * deltaTime * 1.2f;
             if (!checkBarrierCollision({newX, newY})) {
                 position.x = newX;
                 position.y = newY;
@@ -172,9 +171,8 @@ void EnemyTank::updateAI(float deltaTime) {
                         strafeDir.x /= len;
                         strafeDir.y /= len;
                     }
-                    sf::Vector2f steering = getSteeringFromObstacles(strafeDir);
-                    float newX = position.x + (strafeDir.x + steering.x) * speed * deltaTime * 0.8f;
-                    float newY = position.y + (strafeDir.y + steering.y) * speed * deltaTime * 0.8f;
+                    float newX = position.x + strafeDir.x * speed * deltaTime * 0.8f;
+                    float newY = position.y + strafeDir.y * speed * deltaTime * 0.8f;
                     if (!checkBarrierCollision({newX, newY})) {
                         position.x = newX;
                         position.y = newY;
@@ -184,26 +182,23 @@ void EnemyTank::updateAI(float deltaTime) {
 
             if (isPatrolling) {
                 if (dist > 10.0f) {
-                    sf::Vector2f steering = getSteeringFromObstacles(dir);
-                    float newX = position.x + (dir.x + steering.x) * speed * 0.8f * deltaTime;
-                    float newY = position.y + (dir.y + steering.y) * speed * 0.8f * deltaTime;
+                    float newX = position.x + dir.x * speed * 0.8f * deltaTime;
+                    float newY = position.y + dir.y * speed * 0.8f * deltaTime;
                     if (!checkBarrierCollision({newX, newY})) {
                         position.x = newX;
                         position.y = newY;
                     }
                 }
             } else if (dist > ATTACK_RADIUS) {
-                sf::Vector2f steering = getSteeringFromObstacles(dir);
-                float newX = position.x + (dir.x + steering.x) * speed * deltaTime;
-                float newY = position.y + (dir.y + steering.y) * speed * deltaTime;
+                float newX = position.x + dir.x * speed * deltaTime;
+                float newY = position.y + dir.y * speed * deltaTime;
                 if (!checkBarrierCollision({newX, newY})) {
                     position.x = newX;
                     position.y = newY;
                 }
             } else if (dist < ATTACK_RADIUS * 0.5f) {
-                sf::Vector2f steering = getSteeringFromObstacles({-dir.x, -dir.y});
-                float newX = position.x + (-dir.x + steering.x) * speed * 0.6f * deltaTime;
-                float newY = position.y + (-dir.y + steering.y) * speed * 0.6f * deltaTime;
+                float newX = position.x + (-dir.x) * speed * 0.6f * deltaTime;
+                float newY = position.y + (-dir.y) * speed * 0.6f * deltaTime;
                 if (!checkBarrierCollision({newX, newY})) {
                     position.x = newX;
                     position.y = newY;
@@ -212,7 +207,7 @@ void EnemyTank::updateAI(float deltaTime) {
 
             rotation = turretRotation;
 
-            if (canShoot() && dist < ATTACK_RADIUS && !isPatrolling && !isFleeing) {
+            if (canShoot() && dist < ATTACK_RADIUS && !isPatrolling && !isFleeing && hasLineOfSight(targetPos)) {
                 shoot();
             }
         }
@@ -223,7 +218,7 @@ void EnemyTank::updateAI(float deltaTime) {
 }
 
 void EnemyTank::updatePatrol(float deltaTime) {
-    const float PATROL_SPEED = 2.0f;
+    const float PATROL_SPEED = 4.0f;
     const float TURN_RATE = 4.0f;
     const float DIRECTION_CHANGE_TIME = 2.0f;
     
@@ -280,9 +275,8 @@ void EnemyTank::updatePatrol(float deltaTime) {
             patrolTimer = DIRECTION_CHANGE_TIME;
         }
     } else {
-        sf::Vector2f steering = getSteeringFromObstacles(patrolDirection);
-        float newX = position.x + (patrolDirection.x + steering.x) * speed * PATROL_SPEED * deltaTime;
-        float newY = position.y + (patrolDirection.y + steering.y) * speed * PATROL_SPEED * deltaTime;
+        float newX = position.x + patrolDirection.x * speed * PATROL_SPEED * deltaTime;
+        float newY = position.y + patrolDirection.y * speed * PATROL_SPEED * deltaTime;
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;
             position.y = newY;

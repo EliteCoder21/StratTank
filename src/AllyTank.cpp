@@ -2,6 +2,7 @@
 #include "Entity.h"
 #include "PlayerTank.h"
 #include "EnemyTank.h"
+#include "Fort.h"
 #include "WorldConfig.h"
 #include <cmath>
 #include <algorithm>
@@ -34,7 +35,7 @@ void AllyTank::update(float deltaTime) {
 }
 
 void AllyTank::findAndAttackNearestEnemy() {
-    if (!enemyList || enemyList->empty()) {
+    if ((!enemyList || enemyList->empty()) && (!fortList || fortList->empty())) {
         clearTarget();
         wander();
         return;
@@ -45,15 +46,32 @@ void AllyTank::findAndAttackNearestEnemy() {
     Entity* nearestEnemy = nullptr;
     float nearestDist = std::numeric_limits<float>::max();
     
-    for (auto& enemy : *enemyList) {
-        if (enemy && enemy->isAlive()) {
-            float dist = std::sqrt(
-                std::pow(enemy->getPosition().x - position.x, 2) + 
-                std::pow(enemy->getPosition().y - position.y, 2)
-            );
-            if (dist < DETECTION_RADIUS && dist < nearestDist) {
-                nearestDist = dist;
-                nearestEnemy = enemy.get();
+    if (enemyList) {
+        for (auto& enemy : *enemyList) {
+            if (enemy && enemy->isAlive()) {
+                float dist = std::sqrt(
+                    std::pow(enemy->getPosition().x - position.x, 2) + 
+                    std::pow(enemy->getPosition().y - position.y, 2)
+                );
+                if (dist < DETECTION_RADIUS && dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestEnemy = enemy.get();
+                }
+            }
+        }
+    }
+    
+    if (fortList) {
+        for (auto& fort : *fortList) {
+            if (fort && fort->isAlive()) {
+                float dist = std::sqrt(
+                    std::pow(fort->getPosition().x - position.x, 2) + 
+                    std::pow(fort->getPosition().y - position.y, 2)
+                );
+                if (dist < DETECTION_RADIUS && dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestEnemy = fort.get();
+                }
             }
         }
     }
@@ -127,9 +145,8 @@ void AllyTank::wander() {
     if (len > 5.0f) {
         dir.x /= len;
         dir.y /= len;
-        sf::Vector2f steering = getSteeringFromObstacles(dir);
-        float newX = position.x + (dir.x + steering.x) * speed * 0.8f * 0.016f;
-        float newY = position.y + (dir.y + steering.y) * speed * 0.8f * 0.016f;
+        float newX = position.x + dir.x * speed * 0.8f * 0.016f;
+        float newY = position.y + dir.y * speed * 0.8f * 0.016f;
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;
             position.y = newY;
@@ -163,9 +180,8 @@ void AllyTank::attackEntity(Entity* target) {
     float preferredDist = 180.0f;
     
     if (dist > preferredDist + 20.0f) {
-        sf::Vector2f steering = getSteeringFromObstacles(dir);
-        float newX = position.x + (dir.x + steering.x) * speed * 0.016f;
-        float newY = position.y + (dir.y + steering.y) * speed * 0.016f;
+        float newX = position.x + dir.x * speed * 0.016f;
+        float newY = position.y + dir.y * speed * 0.016f;
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;
             position.y = newY;
@@ -173,9 +189,8 @@ void AllyTank::attackEntity(Entity* target) {
         rotation = turretRotation;
     } else if (dist < preferredDist - 20.0f) {
         sf::Vector2f retreatDir = {-dir.x, -dir.y};
-        sf::Vector2f steering = getSteeringFromObstacles(retreatDir);
-        float newX = position.x + (retreatDir.x + steering.x) * speed * 0.5f * 0.016f;
-        float newY = position.y + (retreatDir.y + steering.y) * speed * 0.5f * 0.016f;
+        float newX = position.x + retreatDir.x * speed * 0.5f * 0.016f;
+        float newY = position.y + retreatDir.y * speed * 0.5f * 0.016f;
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;
             position.y = newY;
@@ -186,7 +201,7 @@ void AllyTank::attackEntity(Entity* target) {
     position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
     position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
     
-    if (canShoot() && dist < 400.0f) {
+    if (canShoot() && dist < 400.0f && hasLineOfSight(target->getPosition())) {
         shoot();
     }
 }
@@ -241,6 +256,10 @@ void AllyTank::setAutoTargetEnabled(bool enabled) {
 
 void AllyTank::setEnemyList(const std::vector<std::unique_ptr<EnemyTank>>* list) {
     enemyList = list;
+}
+
+void AllyTank::setFortList(const std::vector<std::unique_ptr<Fort>>* list) {
+    fortList = list;
 }
 
 void AllyTank::renderBody(sf::RenderWindow& window) {

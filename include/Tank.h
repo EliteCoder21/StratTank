@@ -28,7 +28,8 @@ public:
     bool checkBarrierCollision(const sf::Vector2f& newPos);
     bool isInsideBarrier();
     void teleportToRandomPosition();
-    sf::Vector2f getSteeringFromObstacles(const sf::Vector2f& direction);
+    
+    bool hasLineOfSight(const sf::Vector2f& targetPos) const;
     
     void setProjectileCallback(std::function<void(float, float, float, int, bool)> callback) {
         projectileCallback = callback;

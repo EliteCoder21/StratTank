@@ -23,9 +23,8 @@ void PlayerTank::update(float deltaTime) {
         moveX /= len;
         moveY /= len;
         
-        sf::Vector2f steering = getSteeringFromObstacles({moveX, moveY});
-        float newX = position.x + (moveX + steering.x) * speed * deltaTime;
-        float newY = position.y + (moveY + steering.y) * speed * deltaTime;
+        float newX = position.x + moveX * speed * deltaTime;
+        float newY = position.y + moveY * speed * deltaTime;
         
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;

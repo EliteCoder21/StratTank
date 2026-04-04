@@ -21,6 +21,7 @@ public:
     void setAutoTargetEnabled(bool enabled);
     void setGuardingBase(bool guarding) { guardingBase = guarding; }
     void setEnemyList(const std::vector<std::unique_ptr<EnemyTank>>* list);
+    void setFortList(const std::vector<std::unique_ptr<Fort>>* list);
     void setPlayerBasePosition(sf::Vector2f pos) { playerBasePosition = pos; }
     bool hasTarget() const { return attackTarget != nullptr; }
     int getAllyId() const { return allyId; }
@@ -32,6 +33,7 @@ private:
     float aiUpdateTimer;
     bool autoTargetEnabled;
     const std::vector<std::unique_ptr<EnemyTank>>* enemyList = nullptr;
+    const std::vector<std::unique_ptr<Fort>>* fortList = nullptr;
     sf::Vector2f playerBasePosition;
     sf::Vector2f patrolTarget;
     float patrolRadius = 100.0f;
