@@ -176,21 +176,22 @@ void AllyTank::wander() {
         dir.y /= len;
         
         sf::Vector2f costGrad = getCostGradient(position.x, position.y);
-        sf::Vector2f moveDir = dir;
+        sf::Vector2f rawMoveDir = dir;
         if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
             float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
             if (gradLen > 0.1f) {
                 float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
                 sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
-                moveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
-                float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                rawMoveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
+                float moveLen = std::sqrt(rawMoveDir.x * rawMoveDir.x + rawMoveDir.y * rawMoveDir.y);
                 if (moveLen > 0.0f) {
-                    moveDir.x /= moveLen;
-                    moveDir.y /= moveLen;
+                    rawMoveDir.x /= moveLen;
+                    rawMoveDir.y /= moveLen;
                 }
             }
         }
         
+        sf::Vector2f moveDir = getSmoothedDirection(rawMoveDir, 0.016f);
         float newX = position.x + moveDir.x * speed * 0.8f * 0.016f;
         float newY = position.y + moveDir.y * speed * 0.8f * 0.016f;
         position.x = newX;
@@ -228,27 +229,28 @@ void AllyTank::attackEntity(Entity* target) {
     
     if (dist > preferredDist + 20.0f || !canSeeTarget) {
         sf::Vector2f costGrad = getCostGradient(position.x, position.y);
-        sf::Vector2f moveDir = dir;
+        sf::Vector2f rawMoveDir = dir;
         if (costGrad.x != 0.0f || costGrad.y != 0.0f) {
             float gradLen = std::sqrt(costGrad.x * costGrad.x + costGrad.y * costGrad.y);
             if (gradLen > 0.1f) {
                 float avoidStrength = std::min(gradLen * 0.5f, 5.0f);
                 sf::Vector2f avoidDir = {-costGrad.x / gradLen, -costGrad.y / gradLen};
-                moveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
-                float moveLen = std::sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y);
+                rawMoveDir = {dir.x + avoidDir.x * avoidStrength, dir.y + avoidDir.y * avoidStrength};
+                float moveLen = std::sqrt(rawMoveDir.x * rawMoveDir.x + rawMoveDir.y * rawMoveDir.y);
                 if (moveLen > 0.0f) {
-                    moveDir.x /= moveLen;
-                    moveDir.y /= moveLen;
+                    rawMoveDir.x /= moveLen;
+                    rawMoveDir.y /= moveLen;
                 }
             }
         }
+        sf::Vector2f moveDir = getSmoothedDirection(rawMoveDir, 0.016f);
         float newX = position.x + moveDir.x * currentSpeed * 0.016f;
         float newY = position.y + moveDir.y * currentSpeed * 0.016f;
         position.x = newX;
         position.y = newY;
         rotation = turretRotation;
     } else if (dist < preferredDist - 20.0f) {
-        sf::Vector2f retreatDir = {-dir.x, -dir.y};
+        sf::Vector2f retreatDir = getSmoothedDirection({-dir.x, -dir.y}, 0.016f);
         float newX = position.x + retreatDir.x * currentSpeed * 0.5f * 0.016f;
         float newY = position.y + retreatDir.y * currentSpeed * 0.5f * 0.016f;
         position.x = newX;

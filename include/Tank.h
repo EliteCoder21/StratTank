@@ -34,6 +34,7 @@ public:
     
     bool hasLineOfSight(const sf::Vector2f& targetPos) const;
     sf::Vector2f getCostGradient(float x, float y) const;
+    sf::Vector2f getSmoothedDirection(const sf::Vector2f& targetDir, float deltaTime);
     
     void setProjectileCallback(std::function<void(float, float, float, int, bool)> callback) {
         projectileCallback = callback;
@@ -56,6 +57,8 @@ protected:
     float regenCooldown = 0.0f;
     static constexpr float REGEN_INTERVAL = 3.0f;
     static constexpr int REGEN_AMOUNT = 1;
+    sf::Vector2f moveDir = {1.0f, 0.0f};
+    static constexpr float MOVE_SMOOTHING = 0.85f;
 
     virtual void renderBody(sf::RenderWindow& window);
     virtual void renderTurret(sf::RenderWindow& window);

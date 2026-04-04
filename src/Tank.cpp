@@ -194,6 +194,21 @@ sf::Vector2f Tank::getCostGradient(float x, float y) const {
     return costMap->getGradient(x, y);
 }
 
+sf::Vector2f Tank::getSmoothedDirection(const sf::Vector2f& targetDir, float deltaTime) {
+    float blend = 1.0f - MOVE_SMOOTHING;
+    float newX = moveDir.x * MOVE_SMOOTHING + targetDir.x * blend;
+    float newY = moveDir.y * MOVE_SMOOTHING + targetDir.y * blend;
+    
+    float len = std::sqrt(newX * newX + newY * newY);
+    if (len > 0.0f) {
+        newX /= len;
+        newY /= len;
+    }
+    
+    moveDir = {newX, newY};
+    return moveDir;
+}
+
 void Tank::teleportToRandomPosition() {
     if (!barriers) return;
     

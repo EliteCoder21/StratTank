@@ -16,39 +16,28 @@ void CostMap::generate(const std::vector<sf::FloatRect>& barriers, float wWidth,
     costGrid.resize(gridWidth * gridHeight, SAFE_COST);
     
     const float MAX_COST_LOCAL = MAX_COST * 100.0f;
-    const float SAFE_DIST = 5.0f;
-    const float FULL_COST_DIST = 80.0f;
+    const float SIGMA = 50.0f;
     
     for (int y = 0; y < gridHeight; y++) {
         for (int x = 0; x < gridWidth; x++) {
             float worldX = indexToWorld(x);
             float worldY = indexToWorld(y);
             
-            float minDistToBarrier = 1e6f;
+            float totalCost = SAFE_COST;
             
             for (const auto& barrier : barriers) {
-                float closestX = std::max(barrier.position.x, std::min(worldX, barrier.position.x + barrier.size.x));
-                float closestY = std::max(barrier.position.y, std::min(worldY, barrier.position.y + barrier.size.y));
+                float centerX = barrier.position.x + barrier.size.x / 2.0f;
+                float centerY = barrier.position.y + barrier.size.y / 2.0f;
                 
-                float dx = worldX - closestX;
-                float dy = worldY - closestY;
+                float dx = std::abs(worldX - centerX);
+                float dy = std::abs(worldY - centerY);
                 float dist = std::sqrt(dx * dx + dy * dy);
                 
-                minDistToBarrier = std::min(minDistToBarrier, dist);
+                float cost = MAX_COST_LOCAL * std::exp(-(dist * dist) / (2.0f * SIGMA * SIGMA));
+                totalCost = std::max(totalCost, cost);
             }
             
-            float cost;
-            if (minDistToBarrier < SAFE_DIST) {
-                cost = MAX_COST_LOCAL;
-            } else if (minDistToBarrier < FULL_COST_DIST) {
-                float t = (minDistToBarrier - SAFE_DIST) / (FULL_COST_DIST - SAFE_DIST);
-                float smoothT = t * t * (3.0f - 2.0f * t);
-                cost = MAX_COST_LOCAL * (1.0f - smoothT) + SAFE_COST * smoothT;
-            } else {
-                cost = SAFE_COST;
-            }
-            
-            costGrid[y * gridWidth + x] = cost;
+            costGrid[y * gridWidth + x] = totalCost;
         }
     }
 }
