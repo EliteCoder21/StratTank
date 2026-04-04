@@ -44,10 +44,14 @@
 
 - **Player Tank Control** - WASD movement with mouse aiming and shooting
 - **Ally Commands** - Issue move/attack orders to allied tanks with right-click
-- **6 Allied Tanks** - 2 guarding base, 4 mobile support units
+- **Multiple Allied Tanks** - 2 guarding base, 4+ mobile support units (increases each wave)
 - **Multiple Enemy Types** - Light tanks, heavy tanks, and fortified positions
 - **Wave-Based Progression** - 7 waves with escalating difficulty
 - **Strategic Gameplay** - Randomly generated barriers for tactical combat
+- **Line of Sight Combat** - Tanks can only shoot targets they can see
+- **Health Regeneration** - All tanks and forts regenerate 1 HP every 3 seconds
+- **Healing Hearts** - Health pickups heal all tanks (player, allies, enemies)
+- **Heart Seeking** - Low-health tanks seek out healing hearts at 2x speed
 - **Visual Effects** - Particle systems for explosions, muzzle flashes, and smoke
 - **HUD System** - Health, wave number, score, enemy base status
 - **Dynamic World** - Adapts to any screen resolution
@@ -198,33 +202,42 @@ These are typically found in your compiler's `bin` directory (e.g., `C:\msys64\u
 ### Game Entities
 
 #### Player Tank
-- **Health:** 100 HP
+- **Health:** 200 HP
 - **Speed:** 150 units/sec
 - **Damage:** 15 per shot
 - **Fire Rate:** 3.0 shots/sec
 - **Color:** Olive green
+- **Regeneration:** 1 HP every 3 seconds
 
 #### Ally Tanks
-- **Health:** 60 HP
+- **Health:** 120 HP
 - **Speed:** 120 units/sec
 - **Damage:** 12 per shot
-- **Fire Rate:** 3.0 shots/sec
+- **Fire Rate:** 1.5 shots/sec
 - **Color:** Darker green
+- **Regeneration:** 1 HP every 3 seconds
+- **Special:** Attacks enemy forts, seeks healing hearts when below 75% HP
 
 #### Enemy Types
 
 | Type | Health | Speed | Damage | Fire Rate |
 |------|--------|-------|--------|-----------|
-| **Light Tank** | 30 HP | 120 | 10 | 2.5/sec |
-| **Heavy Tank** | 80 HP | 60 | 20 | 1.5/sec |
+| **Light Tank** | 60 HP | 120 | 10 | 2.5/sec |
+| **Heavy Tank** | 160 HP | 60 | 20 | 1.5/sec |
 | **Fort** | 200 HP | 0 | 25 | 1.5/sec |
+
+All enemies regenerate 1 HP every 3 seconds and seek healing hearts when below 75% HP.
 
 #### Special Elements
 
-- **Health Pickups (Hearts):** Spawn every 10 seconds, heal 25 HP
+- **Health Pickups (Hearts):** Spawn every 2.5 seconds, heal 25 HP to all tanks
 - **Fort Bombs:** 200px radius, 500 damage, 10-second cooldown
+- **Line of Sight:** Tanks can only shoot targets not blocked by barriers
+- **Flee Behavior:** Tanks flee when below 50% health
 
 ### Wave System
+
+Each wave spawns 4 additional ally tanks to reinforce your forces.
 
 | Wave | Light Tanks | Heavy Tanks | Forts |
 |------|-------------|-------------|-------|
@@ -302,10 +315,10 @@ Entity (Abstract Base)
 | File | Purpose |
 |------|---------|
 | `Game.cpp` | Main game loop, state management, collision detection |
-| `Tank.cpp` | Base tank movement, steering, obstacle avoidance |
-| `AllyTank.cpp` | Ally AI: auto-targeting, defending, wandering |
-| `EnemyTank.cpp` | Enemy AI: flanking, fleeing, patrol behavior |
-| `Fort.cpp` | Fort bomb system, rotating turret AI |
+| `Tank.cpp` | Base tank movement, line of sight, health regeneration |
+| `AllyTank.cpp` | Ally AI: auto-targeting, defending, heart seeking |
+| `EnemyTank.cpp` | Enemy AI: flanking, fleeing, patrol, heart seeking |
+| `Fort.cpp` | Fort bomb system, rotating turret AI, regeneration |
 | `WaveManager.cpp` | Wave configuration and enemy spawning |
 | `ParticleSystem.cpp` | Visual effects (explosions, muzzle flash, smoke) |
 | `HUD.cpp` | User interface rendering |
