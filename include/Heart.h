@@ -10,6 +10,7 @@ public:
     void render(sf::RenderWindow& window) override;
     
     int getHealAmount() const { return healAmount; }
+    bool isHeart() const override { return true; }
 
 private:
     int healAmount;

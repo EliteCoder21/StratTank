@@ -3,12 +3,13 @@
 #include "PlayerTank.h"
 #include "EnemyTank.h"
 #include "Fort.h"
+#include "Heart.h"
 #include "WorldConfig.h"
 #include <cmath>
 #include <algorithm>
 
 AllyTank::AllyTank(float x, float y, int id)
-    : Tank(x, y, EntityType::Ally, 60, 120.0f, 12, 3.0f), allyId(id), aiUpdateTimer(0.0f) {
+    : Tank(x, y, EntityType::Ally, 120, 120.0f, 12, 1.5f), allyId(id), aiUpdateTimer(0.0f) {
     size = {35, 35};
     autoTargetEnabled = true;
     patrolTarget = position;
@@ -35,13 +36,39 @@ void AllyTank::update(float deltaTime) {
 }
 
 void AllyTank::findAndAttackNearestEnemy() {
+    const float DETECTION_RADIUS = 500.0f;
+    const float SEEK_HEAL_THRESHOLD = 0.75f;
+    
+    float healthRatio = static_cast<float>(health) / maxHealth;
+    
+    if (healthRatio < SEEK_HEAL_THRESHOLD && heartList && !heartList->empty()) {
+        Entity* nearestHeart = nullptr;
+        float nearestDist = std::numeric_limits<float>::max();
+        
+        for (const auto& heart : *heartList) {
+            if (heart && !heart->isMarkedForDeletion()) {
+                float dist = std::sqrt(
+                    std::pow(heart->getPosition().x - position.x, 2) + 
+                    std::pow(heart->getPosition().y - position.y, 2)
+                );
+                if (dist < 600.0f && dist < nearestDist && hasLineOfSight(heart->getPosition())) {
+                    nearestDist = dist;
+                    nearestHeart = heart.get();
+                }
+            }
+        }
+        
+        if (nearestHeart) {
+            attackEntity(nearestHeart);
+            return;
+        }
+    }
+    
     if ((!enemyList || enemyList->empty()) && (!fortList || fortList->empty())) {
         clearTarget();
         wander();
         return;
     }
-    
-    const float DETECTION_RADIUS = 500.0f;
     
     Entity* nearestEnemy = nullptr;
     float nearestDist = std::numeric_limits<float>::max();
@@ -177,11 +204,13 @@ void AllyTank::attackEntity(Entity* target) {
     
     turretRotation = std::atan2(dir.y, dir.x) * 180.0f / 3.14159f;
     
-    float preferredDist = 180.0f;
+    bool isHealingHeart = target->isHeart();
+    float currentSpeed = isHealingHeart ? speed * 2.0f : speed;
+    float preferredDist = isHealingHeart ? 10.0f : 180.0f;
     
     if (dist > preferredDist + 20.0f) {
-        float newX = position.x + dir.x * speed * 0.016f;
-        float newY = position.y + dir.y * speed * 0.016f;
+        float newX = position.x + dir.x * currentSpeed * 0.016f;
+        float newY = position.y + dir.y * currentSpeed * 0.016f;
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;
             position.y = newY;
@@ -189,8 +218,8 @@ void AllyTank::attackEntity(Entity* target) {
         rotation = turretRotation;
     } else if (dist < preferredDist - 20.0f) {
         sf::Vector2f retreatDir = {-dir.x, -dir.y};
-        float newX = position.x + retreatDir.x * speed * 0.5f * 0.016f;
-        float newY = position.y + retreatDir.y * speed * 0.5f * 0.016f;
+        float newX = position.x + retreatDir.x * currentSpeed * 0.5f * 0.016f;
+        float newY = position.y + retreatDir.y * currentSpeed * 0.5f * 0.016f;
         if (!checkBarrierCollision({newX, newY})) {
             position.x = newX;
             position.y = newY;
@@ -201,7 +230,7 @@ void AllyTank::attackEntity(Entity* target) {
     position.x = std::max(20.0f, std::min(WorldConfig::WIDTH - 20.0f, position.x));
     position.y = std::max(20.0f, std::min(WorldConfig::HEIGHT - 20.0f, position.y));
     
-    if (canShoot() && dist < 400.0f && hasLineOfSight(target->getPosition())) {
+    if (!isHealingHeart && canShoot() && dist < 400.0f && hasLineOfSight(target->getPosition())) {
         shoot();
     }
 }

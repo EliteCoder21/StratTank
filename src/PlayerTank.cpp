@@ -3,7 +3,7 @@
 #include <cmath>
 
 PlayerTank::PlayerTank(float x, float y)
-    : Tank(x, y, EntityType::Player, 100, 150.0f, 15, 3.0f) {
+    : Tank(x, y, EntityType::Player, 200, 150.0f, 15, 3.0f) {
     size = {45, 45};
 }
 

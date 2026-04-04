@@ -339,6 +339,7 @@ void Game::update(float deltaTime) {
         }
         ally->setEnemyList(&enemies);
         ally->setFortList(&forts);
+        ally->setHeartList(&hearts);
         ally->setPlayerBasePosition(playerBase->getPosition());
         ally->setProjectileCallback([this](float x, float y, float angle, int dmg, bool isPlayer) {
             this->spawnProjectile(std::make_unique<Projectile>(x, y, angle, dmg, isPlayer));
@@ -356,6 +357,7 @@ void Game::update(float deltaTime) {
         });
         enemy->setPlayerPosition(player->getPosition());
         enemy->setPlayerBasePosition(playerBase->getPosition());
+        enemy->setHeartList(&hearts);
         std::vector<Entity*> allyEntities;
         for (auto& ally : allies) {
             allyEntities.push_back(ally.get());
@@ -385,7 +387,7 @@ void Game::update(float deltaTime) {
     }
     
     heartSpawnTimer += deltaTime;
-    if (heartSpawnTimer > 10.0f) {
+    if (heartSpawnTimer > 2.5f) {
         heartSpawnTimer = 0.0f;
         sf::Vector2u screenSize = window.getSize();
         float x = 100.0f + static_cast<float>(std::rand() % static_cast<int>(screenSize.x - 200));
@@ -398,9 +400,33 @@ void Game::update(float deltaTime) {
     }
     
     for (auto it = hearts.begin(); it != hearts.end(); ) {
+        bool collected = false;
         if (player->getBounds().findIntersection((*it)->getBounds()).has_value()) {
             player->heal((*it)->getHealAmount());
             particles.emitExplosion((*it)->getPosition());
+            collected = true;
+        }
+        if (!collected) {
+            for (auto& ally : allies) {
+                if (ally && ally->getBounds().findIntersection((*it)->getBounds()).has_value()) {
+                    ally->heal((*it)->getHealAmount());
+                    particles.emitExplosion((*it)->getPosition());
+                    collected = true;
+                    break;
+                }
+            }
+        }
+        if (!collected) {
+            for (auto& enemy : enemies) {
+                if (enemy && enemy->getBounds().findIntersection((*it)->getBounds()).has_value()) {
+                    enemy->heal((*it)->getHealAmount());
+                    particles.emitExplosion((*it)->getPosition());
+                    collected = true;
+                    break;
+                }
+            }
+        }
+        if (collected) {
             it = hearts.erase(it);
         } else if ((*it)->isMarkedForDeletion()) {
             it = hearts.erase(it);
@@ -425,7 +451,7 @@ void Game::update(float deltaTime) {
     if (totalEnemies == 0 && !waveManager.isGameComplete()) {
         waveManager.startNextWave();
         
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             sf::Vector2u screenSize = window.getSize();
             float x = 200.0f + static_cast<float>(std::rand() % static_cast<int>(screenSize.x - 400));
             float y = 200.0f + static_cast<float>(std::rand() % static_cast<int>(screenSize.y - 400));

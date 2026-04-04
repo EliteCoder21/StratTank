@@ -5,6 +5,7 @@
 
 class Entity;
 class EnemyTank;
+class Heart;
 
 class EnemyTank : public Tank {
 public:
@@ -20,6 +21,7 @@ public:
     void setLeader(EnemyTank* leader) { leaderTank = leader; }
     EnemyTank* getLeader() const { return leaderTank; }
     bool hasLeader() const { return leaderTank != nullptr; }
+    void setHeartList(const std::vector<std::unique_ptr<Heart>>* list) { heartList = list; }
 
 private:
     sf::Vector2f playerPosition;
@@ -40,6 +42,8 @@ private:
     EnemyTank* leaderTank = nullptr;
     float patrolTimer = 0.0f;
     int patrolState = 0;
+    const std::vector<std::unique_ptr<Heart>>* heartList = nullptr;
+    bool seekingHeart = false;
 
     void updateAI(float deltaTime);
     void updatePatrol(float deltaTime);

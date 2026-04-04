@@ -51,6 +51,9 @@ private:
     bool showHealthBar = true;
     sf::Vector2f bombTargetPosition = {0, 0};
     bool bombWarningActive = false;
+    float regenCooldown = 0.0f;
+    static constexpr float REGEN_INTERVAL = 3.0f;
+    static constexpr int REGEN_AMOUNT = 1;
 
     void updateAI();
 };

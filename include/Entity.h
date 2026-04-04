@@ -38,6 +38,7 @@ public:
     int getMaxHealth() const { return maxHealth; }
     bool isAlive() const { return health > 0; }
     bool isMarkedForDeletion() const { return markedForDeletion; }
+    virtual bool isHeart() const { return false; }
 
     void setPosition(float x, float y);
     void setRotation(float rot);

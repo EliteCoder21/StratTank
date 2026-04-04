@@ -1,5 +1,6 @@
 #include "EnemyTank.h"
 #include "Entity.h"
+#include "Heart.h"
 #include "WorldConfig.h"
 #include <cmath>
 #include <cstdlib>
@@ -7,7 +8,7 @@
 
 EnemyTank::EnemyTank(float x, float y, EntityType type)
     : Tank(x, y, type, 
-           type == EntityType::EnemyLight ? 30 : 80,
+           type == EntityType::EnemyLight ? 60 : 160,
            type == EntityType::EnemyLight ? 120.0f : 60.0f,
            type == EntityType::EnemyLight ? 10 : 20,
            type == EntityType::EnemyLight ? 2.5f : 1.5f) {
@@ -60,7 +61,8 @@ void EnemyTank::updateAI(float deltaTime) {
 
     const float DETECTION_RADIUS = 800.0f;
     const float ATTACK_RADIUS = 500.0f;
-    const float FLEE_HEALTH_THRESHOLD = 0.35f;
+    const float FLEE_HEALTH_THRESHOLD = 0.50f;
+    const float SEEK_HEAL_THRESHOLD = 0.75f;
     const float LEADER_DISTANCE = 60.0f;
     
     float healthRatio = static_cast<float>(health) / maxHealth;
@@ -70,6 +72,24 @@ void EnemyTank::updateAI(float deltaTime) {
     float minDist = std::numeric_limits<float>::max();
     bool foundTarget = false;
     bool targetIsEnemy = false;
+    seekingHeart = false;
+
+    if (healthRatio < SEEK_HEAL_THRESHOLD && heartList && !heartList->empty()) {
+        for (const auto& heart : *heartList) {
+            if (heart && !heart->isMarkedForDeletion()) {
+                float d = std::sqrt(std::pow(heart->getPosition().x - position.x, 2) + 
+                                  std::pow(heart->getPosition().y - position.y, 2));
+                if (d < 600.0f && d < minDist && hasLineOfSight(heart->getPosition())) {
+                    minDist = d;
+                    targetPos = heart->getPosition();
+                    foundTarget = true;
+                    targetIsEnemy = false;
+                    isFleeing = true;
+                    seekingHeart = true;
+                }
+            }
+        }
+    }
 
     if (hasLeader() && leaderTank && leaderTank->isAlive()) {
         float leaderDist = std::sqrt(std::pow(leaderTank->getPosition().x - position.x, 2) + 
@@ -132,6 +152,7 @@ void EnemyTank::updateAI(float deltaTime) {
 
     float dist = std::sqrt(std::pow(targetPos.x - position.x, 2) + 
                           std::pow(targetPos.y - position.y, 2));
+    float healSpeedMult = seekingHeart ? 2.0f : 1.0f;
     
     if (dist > 0 && !targetIsEnemy) {
         sf::Vector2f dir = { (targetPos.x - position.x) / dist, 
@@ -140,8 +161,8 @@ void EnemyTank::updateAI(float deltaTime) {
         if (isFleeing && foundTarget) {
             turretRotation = std::atan2(-dir.y, -dir.x) * 180.0f / 3.14159f;
             sf::Vector2f fleeDir = {-dir.x, -dir.y};
-            float newX = position.x + fleeDir.x * speed * deltaTime * 1.2f;
-            float newY = position.y + fleeDir.y * speed * deltaTime * 1.2f;
+            float newX = position.x + fleeDir.x * speed * deltaTime * 1.2f * healSpeedMult;
+            float newY = position.y + fleeDir.y * speed * deltaTime * 1.2f * healSpeedMult;
             if (!checkBarrierCollision({newX, newY})) {
                 position.x = newX;
                 position.y = newY;
@@ -171,8 +192,8 @@ void EnemyTank::updateAI(float deltaTime) {
                         strafeDir.x /= len;
                         strafeDir.y /= len;
                     }
-                    float newX = position.x + strafeDir.x * speed * deltaTime * 0.8f;
-                    float newY = position.y + strafeDir.y * speed * deltaTime * 0.8f;
+                    float newX = position.x + strafeDir.x * speed * deltaTime * 0.8f * healSpeedMult;
+                    float newY = position.y + strafeDir.y * speed * deltaTime * 0.8f * healSpeedMult;
                     if (!checkBarrierCollision({newX, newY})) {
                         position.x = newX;
                         position.y = newY;
@@ -182,23 +203,30 @@ void EnemyTank::updateAI(float deltaTime) {
 
             if (isPatrolling) {
                 if (dist > 10.0f) {
-                    float newX = position.x + dir.x * speed * 0.8f * deltaTime;
-                    float newY = position.y + dir.y * speed * 0.8f * deltaTime;
+                    float newX = position.x + dir.x * speed * 0.8f * deltaTime * healSpeedMult;
+                    float newY = position.y + dir.y * speed * 0.8f * deltaTime * healSpeedMult;
                     if (!checkBarrierCollision({newX, newY})) {
                         position.x = newX;
                         position.y = newY;
                     }
                 }
             } else if (dist > ATTACK_RADIUS) {
-                float newX = position.x + dir.x * speed * deltaTime;
-                float newY = position.y + dir.y * speed * deltaTime;
+                float newX = position.x + dir.x * speed * deltaTime * healSpeedMult;
+                float newY = position.y + dir.y * speed * deltaTime * healSpeedMult;
                 if (!checkBarrierCollision({newX, newY})) {
                     position.x = newX;
                     position.y = newY;
                 }
             } else if (dist < ATTACK_RADIUS * 0.5f) {
-                float newX = position.x + (-dir.x) * speed * 0.6f * deltaTime;
-                float newY = position.y + (-dir.y) * speed * 0.6f * deltaTime;
+                float newX = position.x + (-dir.x) * speed * 0.6f * deltaTime * healSpeedMult;
+                float newY = position.y + (-dir.y) * speed * 0.6f * deltaTime * healSpeedMult;
+                if (!checkBarrierCollision({newX, newY})) {
+                    position.x = newX;
+                    position.y = newY;
+                }
+            } else {
+                float newX = position.x + dir.x * speed * 0.3f * deltaTime * healSpeedMult;
+                float newY = position.y + dir.y * speed * 0.3f * deltaTime * healSpeedMult;
                 if (!checkBarrierCollision({newX, newY})) {
                     position.x = newX;
                     position.y = newY;
@@ -207,7 +235,7 @@ void EnemyTank::updateAI(float deltaTime) {
 
             rotation = turretRotation;
 
-            if (canShoot() && dist < ATTACK_RADIUS && !isPatrolling && !isFleeing && hasLineOfSight(targetPos)) {
+            if (canShoot() && dist < ATTACK_RADIUS && !isPatrolling && !isFleeing && !seekingHeart && hasLineOfSight(targetPos)) {
                 shoot();
             }
         }

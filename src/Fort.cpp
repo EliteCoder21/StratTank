@@ -16,6 +16,12 @@ void Fort::update(float deltaTime) {
     updateAI();
     updateCooldown(deltaTime);
     
+    regenCooldown -= deltaTime;
+    if (regenCooldown <= 0.0f && health < maxHealth) {
+        heal(REGEN_AMOUNT);
+        regenCooldown = REGEN_INTERVAL;
+    }
+    
     bombCooldown -= deltaTime;
     
     bombTargets.clear();

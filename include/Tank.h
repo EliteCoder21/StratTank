@@ -48,6 +48,9 @@ protected:
     bool hasTarget = false;
     std::function<void(float, float, float, int, bool)> projectileCallback;
     const std::vector<sf::FloatRect>* barriers = nullptr;
+    float regenCooldown = 0.0f;
+    static constexpr float REGEN_INTERVAL = 3.0f;
+    static constexpr int REGEN_AMOUNT = 1;
 
     virtual void renderBody(sf::RenderWindow& window);
     virtual void renderTurret(sf::RenderWindow& window);

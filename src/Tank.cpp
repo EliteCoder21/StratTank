@@ -12,6 +12,12 @@ Tank::Tank(float x, float y, EntityType type, int maxHealthVal, float speedVal, 
 void Tank::update(float deltaTime) {
     updateCooldown(deltaTime);
     
+    regenCooldown -= deltaTime;
+    if (regenCooldown <= 0.0f && health < maxHealth) {
+        heal(REGEN_AMOUNT);
+        regenCooldown = REGEN_INTERVAL;
+    }
+    
     if (hasTarget) {
         sf::Vector2f dir = targetPosition - position;
         float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y);
